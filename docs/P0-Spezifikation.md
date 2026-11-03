@@ -1,6 +1,6 @@
 # Gardenplaner – Phase 0: Specification
 
-Status: draft v2 · 03.11.2026 (v2: clean start, environment data §8)
+Status: draft v3 · 03.11.2026 (v2: clean start, environment data §8 · v3: plant data with sources §5)
 Scope: data model, rules engine, starting plant data, screens. No code yet.
 
 ---
@@ -108,6 +108,7 @@ erDiagram
 | `outdoor`, `greenhouse` | bool | where it can grow |
 | `isGreenManure` | bool | |
 | `imageUrl`, `imageCredit`, `imageLicense` | text | Wikimedia Commons |
+| `sourceRef` | text | source of the values (e.g. `BZfE`, `BUND`, `Sec:Plantura`), also on CultureStep and Companion |
 
 ### Variety (optional)
 `speciesId`, `nameDe`, `daysToMaturity?`, `notesDe`, `overrides` (JSON: spacing, timing).
@@ -214,41 +215,83 @@ Input: wishlist (species, count or number of rows). Fill the highest-value spots
 
 ---
 
-## 5. Starting plant data (to be checked in P1)
+## 5. Starting plant data (sourced, v2)
 
-LF = last frost (15.05), FF = first frost (15.10). Spacing in cm (between rows × in the row).
+### 5.0 Sources
+| Key | Source | Used for |
+|---|---|---|
+| **[BZfE]** | Bundeszentrum für Ernährung / BLE: *Tabelle Aussaat- und Pflanzzeiten* (bzfe.de) | **Primary source**: spacing, pre-culture, planting, direct sowing, harvest |
+| **[BUND]** | BUND: *Mischkultur – gute und schlechte Nachbarn* (bund.net) | **Primary source**: neighbours |
+| [LWG] | Bayerische Gartenakademie (LWG Veitshöchheim): plant/row spacing table | Cross-check spacing |
+| [Sec] | Plantura, Ökotest, Utopia, toom/Hornbach guides, Eigenheimerverband, BayWa product sheet | Where BZfE has no value: greenhouse dates, chilli, pre-sprouting, green manure, cucumber pre-culture |
 
-| Art | Latein | Familie | Bedarf | Abstand | Anbauweg(e) | Ernte | Giftig | Lagerung |
+Rule: **BZfE/BUND first**; secondary sources only fill gaps or are cited where they clearly disagree (marked ⚠). Each seed data record gets a field `sourceRef` (e.g. `"BZfE"`, `"Sec:Plantura"`), so it's clear where each value comes from. BZfE gives calendar dates (Central Germany); the tool converts them into offsets from the frost dates (LF = 15.05), so changing the frost date moves them.
+
+Abbreviations: A./M./E. = beginning/middle/end of the month. Spacing = between rows × in the row (cm).
+
+### 5.1 Crops
+| Art | Latein | Familie | Bedarf | Abstand | Vorkultur | Pflanzung / Aussaat | Ernte | Quelle |
 |---|---|---|---|---|---|---|---|---|
-| Tomate | *Solanum lycopersicum* | Nachtschatten | Stark | 80×50 | Fensterbank LF−10…−8 W → pricking out → hardening off → Beet/GH from LF (GH LF−3 W) | Jul–Okt | Grüne Teile, unreife Früchte (Solanin) | 12–16 °C, nicht in den Kühlschrank, grüne nachreifen lassen |
-| Gurke | *Cucumis sativus* | Kürbisgewächse | Stark | 100×50 | a) Fensterbank LF−4 W → planting out LF+1 W · b) direct sowing LF…LF+3 W | Jul–Sep | – | 10–13 °C, getrennt von Tomaten/Äpfeln (Ethylen) |
-| Salat | *Lactuca sativa* | Korbblütler | Schwach | 30×30 | Direct sowing Mär–Aug, succession every 3 W; optionally Fensterbank from Feb | 6–10 W after sowing | – | feucht im Kühlschrank, 3–5 Tage |
-| Radieschen | *Raphanus sativus* var. *sativus* | Kreuzblütler | Schwach | 15×5 | Direct sowing Mär–Mai + Aug–Sep, succession every 2–3 W | 4–6 W after sowing | – | Blätter ab, Kühlschrank ~1 Woche |
-| Zwiebel | *Allium cepa* | Lauchgewächse | Schwach | 25×10 | Onion sets Mär–Apr | Aug (when the leaves fall over) | Giftig für Hunde/Katzen | 2–3 W trocknen, dann dunkel, kühl, trocken (Monate) |
-| Möhre | *Daucus carota* subsp. *sativus* | Doldenblütler | Mittel | 25×4 | Direct sowing Mär–Jun | 10–16 W after sowing | – | Grün ab, in feuchtem Sand kühl (Monate) |
-| Kartoffel | *Solanum tuberosum* | Nachtschatten | Stark | 70×35 | Pre-sprouting Fensterbank (bright, cool) LF−10…−6 W → planting Apr → hilling | Früh: Jun–Jul · Spät: Aug–Sep | Grüne Teile, grüne Knollen, Beeren (Solanin) | dunkel, 4–8 °C, frostfrei |
-| Erdbeere | *Fragaria × ananassa* | Rosengewächse | Mittel | 70×30 | Plant Jul–Aug, stays 3–4 years; remove runners, put straw under the plants | Jun–Jul (everbearing until Okt) | – | kaum lagerbar, 1–2 Tage kühl, einfrieren |
-| Himbeere (Herbst) | *Rubus idaeus* | Rosengewächse | Mittel | 180×50 | Plant Okt–Nov or Mär, permanent crop ~10 years, root barrier; cut back to ground in Feb | Aug–Okt | – | sofort verbrauchen oder einfrieren |
-| Paprika | *Capsicum annuum* | Nachtschatten | Stark | 50×40 | Fensterbank (warm) LF−12…−10 W → GH | Jul–Okt | Grüne Teile leicht giftig | 8–10 °C, ~1 Woche |
-| Chili | *Capsicum* spp. | Nachtschatten | Stark | 50×40 | Fensterbank LF−16…−12 W → GH | Aug–Okt | Capsaicin: Handschuhe | trocknen, einlegen, einfrieren |
-| Phacelia | *Phacelia tanacetifolia* | Raublattgewächse | – | broadcast | Direct sowing Apr–Sep | dig in / leave frozen over winter | – | – |
-| Gelbsenf | *Sinapis alba* | Kreuzblütler | – | broadcast | Direct sowing Aug–Sep | dig in before seeding | – | – |
+| Tomate | *Solanum lycopersicum* | Nachtschatten | Stark | **60×60** (LWG: 80×50) | Fensterbank **M. Mär–M. Apr**; keimt bei 20–22 °C | Freiland **M. Mai–A. Jun**; Gewächshaus **ab E. Apr** | **Aug–Okt** (GH until E. Okt) | BZfE; GH: Sec (Plantura, Eigenheimerverband) |
+| Gurke | *Cucumis sativus* | Kürbisgewächse | Stark | **150×40** (GH upright: ≥ 30 in the row) | Fensterbank **A. Apr**, 3–4 W, keimt bei 20–24 °C | Direct sowing outdoors **from M. Mai**; plant out from M. Mai; GH unheated ⚠ E. Apr (toom) vs. M. Mai (Utopia) → **default A. Mai** | **A. Jun–E. Sep** | BZfE; Vorkultur/GH: Sec |
+| Kopfsalat / Pflücksalat | *Lactuca sativa* | Korbblütler | Schwach | **30×25** | Fensterbank/Anzucht **Mär–Jul** | Plant **A. Apr–M. Aug** · direct sowing **E. Mär–E. Jul**; batch every 3 W | **1,5–2 months** after sowing/planting | BZfE |
+| Radieschen | *Raphanus sativus* var. *sativus* | Kreuzblütler | Schwach | **10×5** (LWG 15×4) | – | Direct sowing **M. Feb–M. Aug** (Feb only under cover); batch every 2–3 W | **E. Apr–E. Sep** | BZfE |
+| Zwiebel (Steckzwiebel) | *Allium cepa* | Lauchgewächse | Schwach | **25×10** | – | Onion sets **Mär–Apr** | **from A. Jul** (when the leaves fall over) | BZfE |
+| Zwiebel (Saat) | *Allium cepa* | Lauchgewächse | Schwach | **25×8** | – | Direct sowing **A. Mär–A. Apr** | **M. Aug–E. Sep** | BZfE |
+| Möhre früh | *Daucus carota* subsp. *sativus* | Doldenblütler | Mittel | **25×4** | – | Direct sowing **A. Mär–M. Jul** | **3–3,5 months** after sowing | BZfE |
+| Möhre spät / Lager | " | " | Mittel | **25×7** | – | Direct sowing **A. Mai–A. Jul** | **4 months** after sowing | BZfE |
+| Kartoffel früh | *Solanum tuberosum* | Nachtschatten | Stark | **60×30** | **Pre-sprouting ~6 W before planting**, bright, 10–15 °C | Plant **M. Apr–E. Mai** (soil ≥ 7–9 °C) → earth up at 10–15 cm height | **from E. Jun** | BZfE; pre-sprouting: Sec (Ökotest, toom) |
+| Kartoffel Lager | " | " | Stark | **60×30** | as above | **M. Apr–E. Mai** | **M. Aug–E. Sep** | BZfE |
+| Erdbeere | *Fragaria × ananassa* | Rosengewächse | Mittel | **90×30** | – | Plant **Jul/Aug**, stays 3–4 years | **Jun/Jul** (everbearing varieties until autumn) | BZfE |
+| Himbeere (Herbst) | *Rubus idaeus* | Rosengewächse | Mittel | **200×40** | – | Plant **Mai/Jun or Okt/Nov**; permanent crop, cut back to ground in late winter | **Aug–A. Nov** | BZfE |
+| Paprika | *Capsicum annuum* | Nachtschatten | Stark | **40×40** (LWG 60×40) | ⚠ BZfE **M. Mär–M. Apr**; Sec **Feb** (10–12 W, 25–28 °C) → **default A.–M. Mär** | Freiland **M. Mai–A. Jun**; GH **from E. Apr** | ⚠ BZfE E. Jul–A. Aug; Sec until Okt → **default E. Jul–Sep** | BZfE + Sec |
+| Chili | *Capsicum* spp. | Nachtschatten | Stark | **40×40** (as Paprika) | Fensterbank **Jan–Feb**, 25–28 °C (>100 days to harvest) | GH **from M. Apr**; Freiland **from M. Mai** | **Aug–Okt** | Sec (Plantura, Utopia) – not in BZfE |
 
-### Neighbours (starting matrix)
+### 5.2 Green manure
+| Art | Latein | Familie | Aussaat | Notes | Quelle |
+|---|---|---|---|---|---|
+| Phacelia | *Phacelia tanacetifolia* | Raublattgewächse | **A. Apr–E. Mai** and **A. Aug–E. Sep**; ~5 g/m² | **Not related to any vegetable family → fits into any rotation**; freezes in winter, leave the remains on the bed | Sec (BayWa product sheet, Kiepenkerl) |
+| Gelbsenf | *Sinapis alba* | Kreuzblütler | **Aug–A. Okt** (grows fast, 4–5 W) | **Not if a Kreuzblütler (Radieschen, cabbage) grew in the bed in the last 3 years** (clubroot); freezes in winter | Sec (selbst.de, gartenjournal) |
+
+### 5.3 Rotation pauses per family (`Family.rotationPauseYears`)
+Nachtschatten 3 · **Kürbisgewächse 4** (Plantura) · **Kreuzblütler 4** (incl. Gelbsenf) · Rosengewächse 4 · all others 3.
+
+### 5.4 Neighbours (BUND, limited to our plants)
 | | gut | schlecht |
 |---|---|---|
-| Tomate | Möhre, Salat, Zwiebel, Radieschen, Paprika | Kartoffel, Gurke |
-| Gurke | Zwiebel, Salat | Tomate, Kartoffel, Radieschen |
-| Salat | Radieschen, Möhre, Zwiebel, Erdbeere, Tomate, Gurke | – |
-| Radieschen | Salat, Möhre, Tomate | Gurke |
-| Zwiebel | Möhre, Erdbeere, Tomate, Gurke, Salat | – |
-| Möhre | Zwiebel, Salat, Tomate, Radieschen | – |
-| Kartoffel | – | Tomate, Gurke, Himbeere |
-| Erdbeere | Zwiebel, Salat | – |
-| Himbeere | – | Kartoffel |
-| Paprika / Chili | Tomate, Zwiebel | – |
+| Tomate | Möhre, Kopfsalat, Pflücksalat, Radieschen, Paprika¹ | Kartoffel, Gurke¹ |
+| Gurke | Zwiebel, Kopfsalat, Paprika | Radieschen, Tomate¹ |
+| Kopfsalat | Zwiebel, Tomate, Radieschen, Gurke, Erdbeere | – (only Petersilie) |
+| Radieschen | Tomate, Salat, Möhre, Erdbeere | Gurke |
+| Zwiebel | Gurke, Kopfsalat, Möhre, Erdbeere | – (Bohnen, Kohl not among our plants) |
+| Möhre | Zwiebel, Tomate, Radieschen, Paprika | – |
+| Kartoffel | – | Tomate |
+| Erdbeere | Radieschen, Kopfsalat, Zwiebel, Paprika | Kartoffel, Tomate, Himbeere |
+| Himbeere | – | Erdbeere |
+| Paprika (+ Chili²) | Möhre, Zwiebel, Gurke, Erdbeere, Tomate¹ | – (only Fenchel) |
 
-> **Greenhouse note:** tomato and cucumber are "bad neighbours" (they want different humidity). In the greenhouse: put them on opposite sides, not in neighbouring rows → the neighbour rule handles this automatically.
+¹ not in BUND; from secondary sources (Hornbach, sanier.de); several sources agree. ² Chili is not listed separately; it gets the Paprika values (same genus).
+**Changes from v1:** Kartoffel–Gurke and Kartoffel–Himbeere removed (no source found); Erdbeere–Kartoffel/Tomate/Himbeere and Paprika–Gurke/Möhre/Erdbeere added.
+
+### 5.5 Toxicity & storage (v1 texts, not yet checked against a source)
+| Art | Giftig | Lagerung |
+|---|---|---|
+| Tomate | Grüne Teile, unreife Früchte (Solanin/Tomatin) | 12–16 °C, nicht in den Kühlschrank, grüne nachreifen lassen |
+| Gurke | – | 10–13 °C, getrennt von Tomaten/Äpfeln (Ethylen) |
+| Salat | – | feucht im Kühlschrank, 3–5 Tage |
+| Radieschen | – | Blätter ab, Kühlschrank ~1 Woche |
+| Zwiebel | Giftig für Hunde/Katzen | 2–3 W trocknen, dann dunkel, kühl, trocken |
+| Möhre | – | Grün ab, in feuchtem Sand kühl |
+| Kartoffel | Grüne Teile, grüne Knollen, Beeren (Solanin) | dunkel, 4–8 °C, frostfrei (Sec: Leinetal24/Utopia) |
+| Erdbeere / Himbeere | – | kaum lagerbar, 1–2 Tage kühl, einfrieren |
+| Paprika / Chili | grüne Teile leicht giftig; Chili: Capsaicin – Handschuhe | Paprika 8–10 °C ~1 W; Chili trocknen/einfrieren |
+
+### 5.6 Still to do in P1
+- Check toxicity (BfR / Giftinformationszentrum) and storage texts (BZfE) against a source before they go into the database
+- Environment fields from §8.2 (minimum temperature, germination temperature, soil moisture); germination temperatures already known: Tomate 20–22 °C, Gurke 20–24 °C, Paprika/Chili 25–28 °C
+- Heights/widths for the plant card
+
+> **Greenhouse:** the order Tomate | Paprika | Chili | Gurke has only good neighbours next to each other. Tomate and Gurke must not be in neighbouring rows.
 
 ---
 
@@ -323,5 +366,5 @@ Sensors (ESP32 …) ──HTTPS POST + token──►├─ app (SvelteKit) ─ 
 ## 9. Open points
 1. Sensors: is "humidity" air humidity, soil moisture or both? Where will the sensors go (greenhouse, beds, outside)?
 2. Power and network in the allotment (Wi-Fi, LTE, LoRaWAN, battery/solar?) → decides how data gets in (§8.1)
-3. Check the timing values and neighbour matrix in §5 (P1)
+3. ~~Check timing values / neighbours~~ → done in v3 with sources (§5)
 4. Bed list for the garden: names, sizes, positions, row direction → P2
