@@ -12,10 +12,10 @@ vite.config.*.timestamp-*
 !.env.example
 
 # Local data (Postgres volume, backups, uploads)
-data/
-pgdata/
-backups/
-uploads/
+/data/
+/pgdata/
+/backups/
+/uploads/
 *.dump
 *.sql.gz
 
