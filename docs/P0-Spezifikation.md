@@ -83,7 +83,7 @@ erDiagram
 ## 3. Entities
 
 ### Settings (one row)
-`gardenName`, `lat`, `lon` (Braunschweig area), `lastFrost` (MM-DD, default **05-15**, after the Eisheiligen), `firstFrost` (default **10-15**), `greenhouseLeadDays` (default 21: greenhouse planting-out is this many days before last frost), `passwordHash`.
+`gardenName`, `lat`, `lon` (Braunschweig area), `lastFrost` (MM-DD, default **05-15**, after the Eisheiligen), `firstFrost` (default **10-15**), `passwordHash` (P6). Greenhouse dates are stored per culture route (own windows, see §5) instead of a global lead time.
 
 ### Family
 `id`, `nameDe`, `nameLat`, `rotationPauseYears` (default 3; Rosengewächse 4).
@@ -187,7 +187,7 @@ Rows **directly next to each other** in the same bed (gap between row edges ≤ 
 
 ### 4.4 Task generation
 - Each `CultureStep` of a planting's route → task with a window `[anchor+offsetStart, anchor+offsetEnd]`.
-- `anchor` = Settings frost dates, the planting's start date, or the previous step. In the greenhouse, LAST_FROST is moved earlier by `greenhouseLeadDays`.
+- `anchor` = Settings frost dates, a fixed date, the planting's start date, or the previous step. Greenhouse routes have their own windows (§5).
 - Repeating steps (`repeatEveryDays`) → one task per interval between plant-out and harvest end.
 - Fertilizing by feeding type: Starkzehrer every 14 days · Mittelzehrer every 28 days · Schwachzehrer once at planting · Gründüngung none.
 - **Idempotent:** `generatedKey = plantingId:stepId:n`. When dates are recalculated, open tasks move with the planting; DONE/SKIPPED stay unchanged.
@@ -195,7 +195,7 @@ Rows **directly next to each other** in the same bed (gap between row edges ≤ 
 
 ### 4.5 Green manure
 When a planting is set to DONE (or the planner finds a free space) and the gap until the next planting is ≥ 6 weeks:
-- Suggest a green manure that fits the season (Phacelia Apr–Sep, Gelbsenf Aug–Sep).
+- Suggest a green manure that fits the season (Phacelia A. Apr–E. Mai / A. Aug–E. Sep, Gelbsenf Aug–A. Okt).
 - **Exclude cross-family conflicts:** no Gelbsenf if a Kreuzblütler (cabbage, Radieschen) is coming next or grew there recently.
 - Green manure is a normal planting → it counts for rotation and the bed history.
 

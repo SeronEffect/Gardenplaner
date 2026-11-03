@@ -5,13 +5,66 @@ weekly garden calendar (pre-culture, sowing, planting out, fertilizing, harvest,
 plant cards, bed history, succession sowing, green manure, shopping list.
 Later: weather data (Open-Meteo) and sensors (temperature, humidity, light).
 
-UI language: German. Code: English.
+UI language: German. Code: English. Spec: [docs/P0-Spezifikation.md](docs/P0-Spezifikation.md).
 
 ## Status
-Phase 0 (planning) – see [docs/P0-Spezifikation.md](docs/P0-Spezifikation.md).
 
-## Planned stack
-SvelteKit (TypeScript) · Drizzle ORM · PostgreSQL · Docker · PWA
+| Phase | Content | Status |
+|---|---|---|
+| P0 | Spec, data model, wireframes | ✅ |
+| P1 | Plant database + plant cards | ✅ |
+| P2 | Beds, rows, seasons, history | – |
+| P3 | Tasks + weekly calendar | – |
+| P4 | Rotation, neighbours, succession, green manure | – |
+| P5 | Suggestions + shopping list | – |
+| P6 | PWA/offline, login, hosting | – |
+| P7 | Weather + sensors | – |
+
+## Stack
+
+SvelteKit 3 (TypeScript, Svelte 5) · Drizzle ORM · PostgreSQL 16 · Docker · Vitest
+
+## Getting started
+
+Requirements: Node ≥ 22.17, pnpm (`corepack enable`), Docker.
+
+```bash
+cp .env.example .env          # set POSTGRES_PASSWORD and the same password in DATABASE_URL
+docker compose up -d db       # Postgres on localhost:5432
+pnpm install
+pnpm dev                      # http://localhost:5173 – applies migrations + plant data on start
+pnpm images:fetch             # optional: plant pictures from Wikimedia Commons (needs internet)
+```
+
+Run everything in Docker instead: `docker compose up -d --build` → http://localhost:3000
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `pnpm dev` | Dev server (loads `.env`) |
+| `pnpm test` | Unit tests (date logic, plant data consistency, picture lookup) |
+| `pnpm check` | Type check |
+| `pnpm build` / `pnpm start` | Production build / run it |
+| `pnpm db:generate` | Create a migration after changing `src/lib/server/db/schema.ts` |
+| `pnpm db:studio` | Browse the database |
+| `pnpm images:fetch [--force]` | Look up plant pictures (author + licence are stored for the credit line) |
+
+## Project layout
+
+```
+src/lib/data/plants.ts      plant reference data with sources (spec §5)
+src/lib/data/sources.ts     source registry (BZfE, BUND, …)
+src/lib/rules/timeline.ts   date logic: culture steps → date windows, year strip
+src/lib/server/db/          schema, connection, seeding
+src/routes/pflanzen/        plant library + plant card
+scripts/                    picture lookup (Wikimedia)
+drizzle/                    SQL migrations
+```
+
+Plant data lives in code (`plants.ts`) and is written to the database on every server start,
+so corrections are a normal code change. Pictures fetched once are kept.
 
 ## License
-MIT – see [LICENSE](LICENSE).
+
+MIT – see [LICENSE](LICENSE). Plant pictures: Wikimedia Commons, licence and author shown on each card.
