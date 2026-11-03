@@ -1,0 +1,38 @@
+# Dependencies & build
+node_modules/
+.svelte-kit/
+build/
+dist/
+.vite/
+vite.config.*.timestamp-*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local data (Postgres volume, backups, uploads)
+data/
+pgdata/
+backups/
+uploads/
+*.dump
+*.sql.gz
+
+# Tests
+coverage/
+test-results/
+playwright-report/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
