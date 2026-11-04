@@ -62,7 +62,7 @@ export const NAV = [
 	{ href: '/saisonplanung', label: 'Saisonplanung', phase: 5 },
 	{ href: '/kalender', label: 'Kalender', phase: 3 },
 	{ href: '/pflanzen', label: 'Pflanzen', phase: 1 },
-	{ href: '/tagebuch', label: 'Tagebuch', phase: 2 }
+	{ href: '/tagebuch', label: 'Tagebuch', phase: 3 }
 ] as const;
 
 /** 15.03. */
@@ -74,4 +74,51 @@ export function formatRange(start: Date, end: Date): string {
 	return start.getTime() === end.getTime()
 		? formatDayMonth(start)
 		: `${formatDayMonth(start)} – ${formatDayMonth(end)}`;
+}
+
+export const BED_TYPE: Record<string, string> = {
+	FLAT: 'Flachbeet',
+	RAISED: 'Hochbeet',
+	GREENHOUSE: 'Gewächshaus',
+	POTS: 'Töpfe / Kübel'
+};
+
+export const ROW_DIRECTION: Record<string, string> = {
+	HORIZONTAL: 'waagerecht (links–rechts)',
+	VERTICAL: 'senkrecht (oben–unten)'
+};
+
+export const ROTATION_MODE: Record<string, string> = {
+	STRICT: 'streng (gleiche Familie gesperrt)',
+	WARN: 'nur Warnung',
+	OFF: 'keine Prüfung (Dauerkultur, Töpfe)'
+};
+
+export const SUN: Record<string, string> = {
+	FULL: 'sonnig',
+	PARTIAL: 'halbschattig',
+	SHADE: 'schattig'
+};
+
+export const SEASON_STATUS: Record<string, string> = {
+	HISTORY: 'Historie',
+	PLANNING: 'in Planung',
+	ACTIVE: 'aktiv',
+	ARCHIVED: 'archiviert'
+};
+
+export const PLANTING_STATUS: Record<string, string> = {
+	PLANNED: 'geplant',
+	ACTIVE: 'wächst',
+	DONE: 'abgeräumt'
+};
+
+/** "2026-05-15" → "15.05.2026" */
+export function formatIsoDate(iso: string): string {
+	return `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+}
+
+/** 400 → "4,0 m" */
+export function formatMetres(cm: number): string {
+	return `${(cm / 100).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} m`;
 }
