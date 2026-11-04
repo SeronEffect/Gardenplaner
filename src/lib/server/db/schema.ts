@@ -1,7 +1,8 @@
-// Database schema – Phase 1 tables (plant knowledge + settings).
-// Garden tables (beds, plantings, tasks …) follow in later phases, see docs/P0-Spezifikation.md §3.
+// Database schema. Phase 1: plant knowledge + settings. Phase 2: beds, seasons, plantings.
+// Later phases (tasks, log, sensors …) follow the spec, see docs/P0-Spezifikation.md §3 and §8.
 import {
 	boolean,
+	date,
 	integer,
 	pgEnum,
 	pgTable,
@@ -170,3 +171,66 @@ export const companions = pgTable(
 	},
 	(t) => [primaryKey({ columns: [t.speciesAId, t.speciesBId] })]
 );
+
+// ── Phase 2: garden – beds, seasons, plantings (spec §3) ────────────────────
+export const bedType = pgEnum('bed_type', ['FLAT', 'RAISED', 'GREENHOUSE', 'POTS']);
+export const rowDirection = pgEnum('row_direction', ['HORIZONTAL', 'VERTICAL']);
+export const rotationMode = pgEnum('rotation_mode', ['STRICT', 'WARN', 'OFF']);
+export const seasonStatus = pgEnum('season_status', ['HISTORY', 'PLANNING', 'ACTIVE', 'ARCHIVED']);
+export const quantityMode = pgEnum('quantity_mode', ['FULL_ROW', 'COUNT']);
+export const plantingStatus = pgEnum('planting_status', ['PLANNED', 'ACTIVE', 'DONE']);
+
+export const beds = pgTable('beds', {
+	id: serial('id').primaryKey(),
+	name: text('name').notNull(),
+	type: bedType('type').notNull().default('FLAT'),
+	/** Position of the top-left corner on the garden map */
+	xCm: integer('x_cm').notNull().default(0),
+	yCm: integer('y_cm').notNull().default(0),
+	/** Rows run along the length */
+	lengthCm: integer('length_cm').notNull(),
+	/** Rows are stacked across the width */
+	widthCm: integer('width_cm').notNull(),
+	/** HORIZONTAL: rows (length) run left–right on the map */
+	rowDirection: rowDirection('row_direction').notNull().default('HORIZONTAL'),
+	rotationMode: rotationMode('rotation_mode').notNull().default('STRICT'),
+	sun: light('sun').notNull().default('FULL'),
+	soilDe: text('soil_de'),
+	notesDe: text('notes_de'),
+	active: boolean('active').notNull().default(true),
+	sortOrder: smallint('sort_order').notNull().default(0)
+});
+
+export const seasons = pgTable('seasons', {
+	id: serial('id').primaryKey(),
+	year: smallint('year').notNull().unique(),
+	status: seasonStatus('status').notNull()
+});
+
+export const plantings = pgTable('plantings', {
+	id: serial('id').primaryKey(),
+	/** Season the planting was planned in (perennials stay visible in later seasons via their dates) */
+	seasonId: integer('season_id')
+		.notNull()
+		.references(() => seasons.id, { onDelete: 'cascade' }),
+	bedId: integer('bed_id')
+		.notNull()
+		.references(() => beds.id, { onDelete: 'cascade' }),
+	speciesId: integer('species_id')
+		.notNull()
+		.references(() => species.id),
+	varietyId: integer('variety_id').references(() => varieties.id, { onDelete: 'set null' }),
+	routeId: integer('route_id').references(() => cultureRoutes.id, { onDelete: 'set null' }),
+	/** Position across the bed, from the top/left edge */
+	offsetCm: integer('offset_cm').notNull(),
+	/** Space the row takes across the bed (default: species row spacing) */
+	widthCm: integer('width_cm').notNull(),
+	quantityMode: quantityMode('quantity_mode').notNull().default('FULL_ROW'),
+	count: integer('count'),
+	/** Time the row is taken in the bed (ISO date) */
+	startDate: date('start_date', { mode: 'string' }).notNull(),
+	endDate: date('end_date', { mode: 'string' }).notNull(),
+	sourcing: sourcing('sourcing').notNull().default('SEED'),
+	status: plantingStatus('status').notNull().default('PLANNED'),
+	notesDe: text('notes_de')
+});

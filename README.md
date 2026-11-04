@@ -13,7 +13,7 @@ UI language: German. Code: English. Spec: [docs/P0-Spezifikation.md](docs/P0-Spe
 |---|---|---|
 | P0 | Spec, data model, wireframes | ✅ |
 | P1 | Plant database + plant cards | ✅ |
-| P2 | Beds, rows, seasons, history | – |
+| P2 | Beds, rows, seasons, history | ✅ |
 | P3 | Tasks + weekly calendar | – |
 | P4 | Rotation, neighbours, succession, green manure | – |
 | P5 | Suggestions + shopping list | – |
@@ -58,6 +58,8 @@ src/lib/data/sources.ts     source registry (BZfE, BUND, …)
 src/lib/rules/timeline.ts   date logic: culture steps → date windows, year strip
 src/lib/server/db/          schema, connection, seeding
 src/routes/pflanzen/        plant library + plant card
+src/routes/gartenplan/      garden map, beds, rows, history
+src/lib/rules/space.ts      space rules for rows (fit, overlap, next free position)
 scripts/                    picture lookup (Wikimedia)
 drizzle/                    SQL migrations
 ```

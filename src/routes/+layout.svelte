@@ -7,7 +7,7 @@
 	let { children }: LayoutProps = $props();
 
 	// Only the phases that are built so far are reachable
-	const BUILT_PHASE = 1;
+	const BUILT_PHASE = 2;
 	const active = (href: string) => page.url.pathname === href || page.url.pathname.startsWith(href + '/');
 </script>
 
@@ -17,7 +17,7 @@
 
 <div class="app">
 	<nav class="side" aria-label="Hauptnavigation">
-		<a class="brand" href="/pflanzen">Gardenplaner</a>
+		<a class="brand" href="/gartenplan">Gardenplaner</a>
 		{#each NAV as item (item.href)}
 			{#if item.phase <= BUILT_PHASE}
 				<a href={item.href} class:on={active(item.href)} aria-current={active(item.href) ? 'page' : undefined}

@@ -1,6 +1,6 @@
 # Gardenplaner – Phase 0: Specification
 
-Status: draft v3 · 03.11.2026 (v2: clean start, environment data §8 · v3: plant data with sources §5)
+Status: v4 · 04.11.2026 (v2: clean start, environment data §8 · v3: plant data with sources §5 · v4: sensor hardware §8.2)
 Scope: data model, rules engine, starting plant data, screens. No code yet.
 
 ---
@@ -70,9 +70,9 @@ erDiagram
   Bed |o--o{ LogEntry : ""
   Season ||--o{ ShoppingItem : ""
   Species ||--o{ ShoppingItem : ""
-  Bed |o--o{ Sensor : "located in"
-  Sensor ||--o{ Reading : raw
-  Sensor ||--o{ ReadingHourly : aggregated
+  Bed |o--o| SensorDevice : "one per bed"
+  SensorDevice ||--o{ Reading : raw
+  SensorDevice ||--o{ ReadingHourly : aggregated
   EnvRule ||--o{ Alert : triggers
   Alert |o--o| Task : creates
   Bed |o--o{ Alert : ""
@@ -339,15 +339,27 @@ Sensors (ESP32 …) ──HTTPS POST + token──►├─ app (SvelteKit) ─ 
 - **Jobs** run in the app (node-cron); no separate service needed.
 
 ### 8.2 Additional entities
+**Hardware setup (decided 04.11.2026):** one sensor device per bed (incl. greenhouse), battery-powered, reports nutrients, humidity, temperature, brightness and its battery level. A 5G router with fixed power at the allotment provides Wi-Fi → devices send via HTTPS directly to the app (the app must be reachable online → hosting in P6).
+
 | Entity | Fields |
 |---|---|
-| **Sensor** | `nameDe`, `kind AIR_TEMP \| AIR_HUMIDITY \| SOIL_MOISTURE \| SOIL_TEMP \| LIGHT_LUX`, `unit`, `bedId?` (also the greenhouse) or `location OUTDOOR`, `deviceId`, `tokenHash`, `active`, `lastSeenAt` |
-| **Reading** | `sensorId`, `ts`, `value` – raw values, kept **90 days** |
-| **ReadingHourly** | `sensorId`, `hour`, `min`, `max`, `avg` – kept permanently (light: + `luxHours`) |
+| **SensorDevice** | `nameDe`, `bedId` (one device per bed), `deviceKey`, `tokenHash`, `batteryPct`, `lastSeenAt`, `firmware?`, `active` |
+| **Reading** | `deviceId`, `kind`, `ts`, `value` – raw values, kept **90 days** |
+| **ReadingHourly** | `deviceId`, `kind`, `hour`, `min`, `max`, `avg` – kept permanently (light: + `luxHours`) |
 | **WeatherForecast** | `fetchedAt`, `ts`, `tempC`, `precipMm`, `sunshineMin`, `windKmh`, `soilTempC?` |
 | **WeatherDaily** | `date`, `tMinC`, `tMaxC`, `precipMm`, `sunshineH`, `source FORECAST \| OBSERVED` |
-| **EnvRule** | `type FROST \| GH_HEAT \| DRY_SOIL \| LOW_LIGHT \| SENSOR_OFFLINE`, `scope (garden/bed)`, `threshold`, `active` |
+| **EnvRule** | `type FROST \| GH_HEAT \| DRY_SOIL \| LOW_LIGHT \| LOW_NUTRIENTS \| LOW_BATTERY \| SENSOR_OFFLINE`, `scope (garden/bed)`, `threshold`, `active` |
 | **Alert** | `envRuleId`, `bedId?`, `triggeredAt`, `messageDe`, `resolvedAt?`, `taskId?` |
+
+`kind` = `SOIL_MOISTURE` (%) · `AIR_HUMIDITY` (%) · `SOIL_TEMP` / `AIR_TEMP` (°C) · `LIGHT_LUX` (lx) · `EC` (µS/cm) · `N` / `P` / `K` (mg/kg) · `BATTERY` (%). New kinds can be added without a schema change.
+
+Ingest (one request per measurement cycle):
+```
+POST /api/ingest   Authorization: Bearer <device token>
+{ "device": "beet-1", "ts": "2027-05-12T06:00:00Z",
+  "values": { "SOIL_MOISTURE": 31.5, "SOIL_TEMP": 12.1, "LIGHT_LUX": 18400, "EC": 640, "BATTERY": 87 } }
+```
+Note on nutrients: low-cost soil "NPK" sensors usually estimate N/P/K from conductivity (EC). The app therefore treats EC as the main value and N/P/K only as a trend, not as a lab value; soil tests in the logbook stay the reference.
 
 **New species fields (filled in P1 if known):** `minTempC` (frost/cold tolerance), `minSoilTempSowC` (soil temperature needed for germination), `soilMoisture LOW|MEDIUM|HIGH`, `light FULL|PARTIAL|SHADE`, `ghMaxTempC`.
 
@@ -358,6 +370,8 @@ Sensors (ESP32 …) ──HTTPS POST + token──►├─ app (SvelteKit) ─ 
 - **Sowing time:** direct sowing is only suggested when the soil temperature (sensor or Open-Meteo) has stayed ≥ `minSoilTempSowC` for 3 days → the task window can move earlier or later ("Möhren säen: Boden jetzt warm genug").
 - **Light:** sum of light hours per bed → check "sun / partial shade" against reality.
 - **Logbook/statistics:** weather and sensor values linked to harvest amounts per season.
+- **Nutrients:** EC trend falls clearly over several weeks during the main season → note "Düngen prüfen" for the bed (complements the fertilizing interval from §4.4).
+- **Battery:** below 20 % → note "Akku laden/tauschen" for the device.
 - **Sensor offline:** no value for > 6 h → note on the dashboard.
 
 ### 8.4 Screens
@@ -368,7 +382,7 @@ Sensors (ESP32 …) ──HTTPS POST + token──►├─ app (SvelteKit) ─ 
 ---
 
 ## 9. Open points
-1. Sensors: is "humidity" air humidity, soil moisture or both? Where will the sensors go (greenhouse, beds, outside)?
-2. Power and network in the allotment (Wi-Fi, LTE, LoRaWAN, battery/solar?) → decides how data gets in (§8.1)
+1. ~~Sensors / network~~ → one device per bed, 5G router with Wi-Fi (§8.2). Still open: humidity of the soil or the air (default: soil moisture), sensor model/hardware
+2. ~~Power and network~~ → decided
 3. ~~Check timing values / neighbours~~ → done in v3 with sources (§5)
-4. Bed list for the garden: names, sizes, positions, row direction → P2
+4. ~~Bed list~~ → 2 beds 4 × 4 m, greenhouse, strawberry bed and raspberry bed (3 m) at the fence; exact sizes/positions of greenhouse and fence beds still to be entered in the app
