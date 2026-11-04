@@ -1,0 +1,1400 @@
+{
+  "id": "79a927ec-9251-44a2-b592-ff1e53efb12e",
+  "prevId": "b50f6c28-934f-44eb-a46e-33495ec85e20",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.beds": {
+      "name": "beds",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "bed_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'FLAT'"
+        },
+        "x_cm": {
+          "name": "x_cm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "y_cm": {
+          "name": "y_cm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "length_cm": {
+          "name": "length_cm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "width_cm": {
+          "name": "width_cm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "row_direction": {
+          "name": "row_direction",
+          "type": "row_direction",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'HORIZONTAL'"
+        },
+        "rotation_mode": {
+          "name": "rotation_mode",
+          "type": "rotation_mode",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'STRICT'"
+        },
+        "sun": {
+          "name": "sun",
+          "type": "light",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'FULL'"
+        },
+        "soil_de": {
+          "name": "soil_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes_de": {
+          "name": "notes_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.companions": {
+      "name": "companions",
+      "schema": "",
+      "columns": {
+        "species_a_id": {
+          "name": "species_a_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "species_b_id": {
+          "name": "species_b_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "relation": {
+          "name": "relation",
+          "type": "relation",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason_de": {
+          "name": "reason_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_ref": {
+          "name": "source_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "companions_species_a_id_species_id_fk": {
+          "name": "companions_species_a_id_species_id_fk",
+          "tableFrom": "companions",
+          "tableTo": "species",
+          "columnsFrom": [
+            "species_a_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "companions_species_b_id_species_id_fk": {
+          "name": "companions_species_b_id_species_id_fk",
+          "tableFrom": "companions",
+          "tableTo": "species",
+          "columnsFrom": [
+            "species_b_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "companions_species_a_id_species_b_id_pk": {
+          "name": "companions_species_a_id_species_b_id_pk",
+          "columns": [
+            "species_a_id",
+            "species_b_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.culture_routes": {
+      "name": "culture_routes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "species_id": {
+          "name": "species_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_de": {
+          "name": "name_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_default": {
+          "name": "is_default",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "culture_routes_species_slug": {
+          "name": "culture_routes_species_slug",
+          "columns": [
+            {
+              "expression": "species_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "culture_routes_species_id_species_id_fk": {
+          "name": "culture_routes_species_id_species_id_fk",
+          "tableFrom": "culture_routes",
+          "tableTo": "species",
+          "columnsFrom": [
+            "species_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.culture_steps": {
+      "name": "culture_steps",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "route_id": {
+          "name": "route_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "step_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location": {
+          "name": "location",
+          "type": "step_location",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anchor": {
+          "name": "anchor",
+          "type": "anchor",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fixed_mmdd": {
+          "name": "fixed_mmdd",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "offset_start_days": {
+          "name": "offset_start_days",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "offset_end_days": {
+          "name": "offset_end_days",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "repeat_every_days": {
+          "name": "repeat_every_days",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "label_de": {
+          "name": "label_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_planting_start": {
+          "name": "is_planting_start",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_planting_end": {
+          "name": "is_planting_end",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "source_ref": {
+          "name": "source_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "culture_steps_route_id_culture_routes_id_fk": {
+          "name": "culture_steps_route_id_culture_routes_id_fk",
+          "tableFrom": "culture_steps",
+          "tableTo": "culture_routes",
+          "columnsFrom": [
+            "route_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.families": {
+      "name": "families",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_de": {
+          "name": "name_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_lat": {
+          "name": "name_lat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rotation_pause_years": {
+          "name": "rotation_pause_years",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 3
+        },
+        "source_ref": {
+          "name": "source_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "families_slug_unique": {
+          "name": "families_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.plantings": {
+      "name": "plantings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "season_id": {
+          "name": "season_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bed_id": {
+          "name": "bed_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "species_id": {
+          "name": "species_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "variety_id": {
+          "name": "variety_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "route_id": {
+          "name": "route_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "offset_cm": {
+          "name": "offset_cm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "width_cm": {
+          "name": "width_cm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity_mode": {
+          "name": "quantity_mode",
+          "type": "quantity_mode",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'FULL_ROW'"
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sourcing": {
+          "name": "sourcing",
+          "type": "sourcing",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'SEED'"
+        },
+        "status": {
+          "name": "status",
+          "type": "planting_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PLANNED'"
+        },
+        "notes_de": {
+          "name": "notes_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "plantings_season_id_seasons_id_fk": {
+          "name": "plantings_season_id_seasons_id_fk",
+          "tableFrom": "plantings",
+          "tableTo": "seasons",
+          "columnsFrom": [
+            "season_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "plantings_bed_id_beds_id_fk": {
+          "name": "plantings_bed_id_beds_id_fk",
+          "tableFrom": "plantings",
+          "tableTo": "beds",
+          "columnsFrom": [
+            "bed_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "plantings_species_id_species_id_fk": {
+          "name": "plantings_species_id_species_id_fk",
+          "tableFrom": "plantings",
+          "tableTo": "species",
+          "columnsFrom": [
+            "species_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "plantings_variety_id_varieties_id_fk": {
+          "name": "plantings_variety_id_varieties_id_fk",
+          "tableFrom": "plantings",
+          "tableTo": "varieties",
+          "columnsFrom": [
+            "variety_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "plantings_route_id_culture_routes_id_fk": {
+          "name": "plantings_route_id_culture_routes_id_fk",
+          "tableFrom": "plantings",
+          "tableTo": "culture_routes",
+          "columnsFrom": [
+            "route_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.seasons": {
+      "name": "seasons",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "year": {
+          "name": "year",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "season_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "seasons_year_unique": {
+          "name": "seasons_year_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "year"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.settings": {
+      "name": "settings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "smallint",
+          "primaryKey": true,
+          "notNull": true,
+          "default": 1
+        },
+        "garden_name": {
+          "name": "garden_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Mein Garten'"
+        },
+        "lat": {
+          "name": "lat",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lon": {
+          "name": "lon",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_frost": {
+          "name": "last_frost",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'05-15'"
+        },
+        "first_frost": {
+          "name": "first_frost",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'10-15'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.species": {
+      "name": "species",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_de": {
+          "name": "name_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_lat": {
+          "name": "name_lat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "family_id": {
+          "name": "family_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feeding_type": {
+          "name": "feeding_type",
+          "type": "feeding_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lifecycle": {
+          "name": "lifecycle",
+          "type": "lifecycle",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lifespan_years": {
+          "name": "lifespan_years",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height_min_cm": {
+          "name": "height_min_cm",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height_max_cm": {
+          "name": "height_max_cm",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "width_cm": {
+          "name": "width_cm",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "row_spacing_cm": {
+          "name": "row_spacing_cm",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "in_row_spacing_cm": {
+          "name": "in_row_spacing_cm",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "toxicity_level": {
+          "name": "toxicity_level",
+          "type": "toxicity_level",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'NONE'"
+        },
+        "toxicity_de": {
+          "name": "toxicity_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "care_de": {
+          "name": "care_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storage_de": {
+          "name": "storage_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fertilize_interval_days": {
+          "name": "fertilize_interval_days",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "default_sourcing": {
+          "name": "default_sourcing",
+          "type": "sourcing",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'SEED'"
+        },
+        "set_weight_g": {
+          "name": "set_weight_g",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outdoor": {
+          "name": "outdoor",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "greenhouse": {
+          "name": "greenhouse",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_green_manure": {
+          "name": "is_green_manure",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "germ_temp_min_c": {
+          "name": "germ_temp_min_c",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "germ_temp_max_c": {
+          "name": "germ_temp_max_c",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "min_temp_c": {
+          "name": "min_temp_c",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "min_soil_temp_sow_c": {
+          "name": "min_soil_temp_sow_c",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "soil_moisture": {
+          "name": "soil_moisture",
+          "type": "level",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "light": {
+          "name": "light",
+          "type": "light",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gh_max_temp_c": {
+          "name": "gh_max_temp_c",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_credit": {
+          "name": "image_credit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_license": {
+          "name": "image_license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_page_url": {
+          "name": "image_page_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_ref": {
+          "name": "source_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "species_family_id_families_id_fk": {
+          "name": "species_family_id_families_id_fk",
+          "tableFrom": "species",
+          "tableTo": "families",
+          "columnsFrom": [
+            "family_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "species_slug_unique": {
+          "name": "species_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.tasks": {
+      "name": "tasks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "planting_id": {
+          "name": "planting_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bed_id": {
+          "name": "bed_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "task_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location": {
+          "name": "location",
+          "type": "step_location",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'BED'"
+        },
+        "title_de": {
+          "name": "title_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "due_start": {
+          "name": "due_start",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "due_end": {
+          "name": "due_end",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "task_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'OPEN'"
+        },
+        "done_at": {
+          "name": "done_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "generated_key": {
+          "name": "generated_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes_de": {
+          "name": "notes_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "tasks_due": {
+          "name": "tasks_due",
+          "columns": [
+            {
+              "expression": "due_start",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "due_end",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "tasks_planting_id_plantings_id_fk": {
+          "name": "tasks_planting_id_plantings_id_fk",
+          "tableFrom": "tasks",
+          "tableTo": "plantings",
+          "columnsFrom": [
+            "planting_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "tasks_bed_id_beds_id_fk": {
+          "name": "tasks_bed_id_beds_id_fk",
+          "tableFrom": "tasks",
+          "tableTo": "beds",
+          "columnsFrom": [
+            "bed_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "tasks_generated_key_unique": {
+          "name": "tasks_generated_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "generated_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.varieties": {
+      "name": "varieties",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "species_id": {
+          "name": "species_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_de": {
+          "name": "name_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "days_to_maturity": {
+          "name": "days_to_maturity",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes_de": {
+          "name": "notes_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "varieties_species_name": {
+          "name": "varieties_species_name",
+          "columns": [
+            {
+              "expression": "species_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "name_de",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "varieties_species_id_species_id_fk": {
+          "name": "varieties_species_id_species_id_fk",
+          "tableFrom": "varieties",
+          "tableTo": "species",
+          "columnsFrom": [
+            "species_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.anchor": {
+      "name": "anchor",
+      "schema": "public",
+      "values": [
+        "LAST_FROST",
+        "FIRST_FROST",
+        "PLANTING_START",
+        "PREV_STEP",
+        "FIXED_MMDD"
+      ]
+    },
+    "public.bed_type": {
+      "name": "bed_type",
+      "schema": "public",
+      "values": [
+        "FLAT",
+        "RAISED",
+        "GREENHOUSE",
+        "POTS"
+      ]
+    },
+    "public.feeding_type": {
+      "name": "feeding_type",
+      "schema": "public",
+      "values": [
+        "HEAVY",
+        "MEDIUM",
+        "LIGHT",
+        "NONE"
+      ]
+    },
+    "public.level": {
+      "name": "level",
+      "schema": "public",
+      "values": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ]
+    },
+    "public.lifecycle": {
+      "name": "lifecycle",
+      "schema": "public",
+      "values": [
+        "ANNUAL",
+        "PERENNIAL"
+      ]
+    },
+    "public.light": {
+      "name": "light",
+      "schema": "public",
+      "values": [
+        "FULL",
+        "PARTIAL",
+        "SHADE"
+      ]
+    },
+    "public.planting_status": {
+      "name": "planting_status",
+      "schema": "public",
+      "values": [
+        "PLANNED",
+        "ACTIVE",
+        "DONE"
+      ]
+    },
+    "public.quantity_mode": {
+      "name": "quantity_mode",
+      "schema": "public",
+      "values": [
+        "FULL_ROW",
+        "COUNT"
+      ]
+    },
+    "public.relation": {
+      "name": "relation",
+      "schema": "public",
+      "values": [
+        "GOOD",
+        "BAD"
+      ]
+    },
+    "public.rotation_mode": {
+      "name": "rotation_mode",
+      "schema": "public",
+      "values": [
+        "STRICT",
+        "WARN",
+        "OFF"
+      ]
+    },
+    "public.row_direction": {
+      "name": "row_direction",
+      "schema": "public",
+      "values": [
+        "HORIZONTAL",
+        "VERTICAL"
+      ]
+    },
+    "public.season_status": {
+      "name": "season_status",
+      "schema": "public",
+      "values": [
+        "HISTORY",
+        "PLANNING",
+        "ACTIVE",
+        "ARCHIVED"
+      ]
+    },
+    "public.sourcing": {
+      "name": "sourcing",
+      "schema": "public",
+      "values": [
+        "SEED",
+        "SEEDLING",
+        "SETS",
+        "EXISTING"
+      ]
+    },
+    "public.step_location": {
+      "name": "step_location",
+      "schema": "public",
+      "values": [
+        "WINDOWSILL",
+        "GREENHOUSE",
+        "BED"
+      ]
+    },
+    "public.step_type": {
+      "name": "step_type",
+      "schema": "public",
+      "values": [
+        "PRESOW",
+        "PRICK_OUT",
+        "PRESPROUT",
+        "HARDEN_OFF",
+        "DIRECT_SOW",
+        "PLANT_OUT",
+        "CARE",
+        "FERTILIZE",
+        "PRUNE",
+        "HARVEST",
+        "CLEAR"
+      ]
+    },
+    "public.task_status": {
+      "name": "task_status",
+      "schema": "public",
+      "values": [
+        "OPEN",
+        "DONE",
+        "SKIPPED"
+      ]
+    },
+    "public.task_type": {
+      "name": "task_type",
+      "schema": "public",
+      "values": [
+        "PRESOW",
+        "PRICK_OUT",
+        "PRESPROUT",
+        "HARDEN_OFF",
+        "DIRECT_SOW",
+        "PLANT_OUT",
+        "CARE",
+        "FERTILIZE",
+        "PRUNE",
+        "HARVEST",
+        "CLEAR",
+        "MANUAL"
+      ]
+    },
+    "public.toxicity_level": {
+      "name": "toxicity_level",
+      "schema": "public",
+      "values": [
+        "NONE",
+        "CAUTION",
+        "TOXIC"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
