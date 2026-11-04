@@ -1,0 +1,96 @@
+:root {
+	--ink: #1f2a1f;
+	--muted: #5b6358;
+	--bg: #f6f6f2;
+	--card: #ffffff;
+	--line: #dcddd5;
+	--line-soft: #eeeee8;
+	--green-dark: #1f3a27;
+	--green: #2f6b3a;
+	--good-bg: #eaf5ea;
+	--good-line: #9ccb9c;
+	--good-ink: #1f4d2a;
+	--bad-bg: #fdecec;
+	--bad-line: #e39a9a;
+	--bad-ink: #7a1f1f;
+	--warn-bg: #fff4e0;
+	--warn-line: #e8b45a;
+	/* Year strip – distinguishable by lightness too */
+	--c-windowsill: #2b6cb0;
+	--c-greenhouse: #6b46c1;
+	--c-directSow: #2f855a;
+	--c-plantOut: #c05621;
+	--c-harvest: #c53030;
+	--radius: 10px;
+	--font: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--serif: Fraunces, Georgia, 'Times New Roman', serif;
+	color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--ink);
+	font-family: var(--font);
+	font-size: 15px;
+	line-height: 1.45;
+}
+
+a {
+	color: var(--green);
+}
+a:hover {
+	color: var(--green-dark);
+}
+
+h1,
+h2,
+h3 {
+	margin: 0;
+	line-height: 1.2;
+}
+
+.muted {
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	border: 1px solid #c9ccc2;
+	background: #fff;
+	color: var(--ink);
+	white-space: nowrap;
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+button,
+input,
+select {
+	font: inherit;
+}
+
+:focus-visible {
+	outline: 3px solid #7fb08a;
+	outline-offset: 2px;
+}

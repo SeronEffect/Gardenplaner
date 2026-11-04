@@ -83,7 +83,7 @@ erDiagram
 ## 3. Entities
 
 ### Settings (one row)
-`gardenName`, `lat`, `lon` (Braunschweig area), `lastFrost` (MM-DD, default **05-15**, after the Eisheiligen), `firstFrost` (default **10-15**), `greenhouseLeadDays` (default 21: greenhouse planting-out is this many days before last frost), `passwordHash`.
+`gardenName`, `lat`, `lon` (Braunschweig area), `lastFrost` (MM-DD, default **05-15**, after the Eisheiligen), `firstFrost` (default **10-15**), `passwordHash` (P6). Greenhouse dates are stored per culture route (own windows, see §5) instead of a global lead time.
 
 ### Family
 `id`, `nameDe`, `nameLat`, `rotationPauseYears` (default 3; Rosengewächse 4).
@@ -187,7 +187,7 @@ Rows **directly next to each other** in the same bed (gap between row edges ≤ 
 
 ### 4.4 Task generation
 - Each `CultureStep` of a planting's route → task with a window `[anchor+offsetStart, anchor+offsetEnd]`.
-- `anchor` = Settings frost dates, the planting's start date, or the previous step. In the greenhouse, LAST_FROST is moved earlier by `greenhouseLeadDays`.
+- `anchor` = Settings frost dates, a fixed date, the planting's start date, or the previous step. Greenhouse routes have their own windows (§5).
 - Repeating steps (`repeatEveryDays`) → one task per interval between plant-out and harvest end.
 - Fertilizing by feeding type: Starkzehrer every 14 days · Mittelzehrer every 28 days · Schwachzehrer once at planting · Gründüngung none.
 - **Idempotent:** `generatedKey = plantingId:stepId:n`. When dates are recalculated, open tasks move with the planting; DONE/SKIPPED stay unchanged.
@@ -195,7 +195,7 @@ Rows **directly next to each other** in the same bed (gap between row edges ≤ 
 
 ### 4.5 Green manure
 When a planting is set to DONE (or the planner finds a free space) and the gap until the next planting is ≥ 6 weeks:
-- Suggest a green manure that fits the season (Phacelia Apr–Sep, Gelbsenf Aug–Sep).
+- Suggest a green manure that fits the season (Phacelia A. Apr–E. Mai / A. Aug–E. Sep, Gelbsenf Aug–A. Okt).
 - **Exclude cross-family conflicts:** no Gelbsenf if a Kreuzblütler (cabbage, Radieschen) is coming next or grew there recently.
 - Green manure is a normal planting → it counts for rotation and the bed history.
 
@@ -273,7 +273,9 @@ Nachtschatten 3 · **Kürbisgewächse 4** (Plantura) · **Kreuzblütler 4** (inc
 ¹ not in BUND; from secondary sources (Hornbach, sanier.de); several sources agree. ² Chili is not listed separately; it gets the Paprika values (same genus).
 **Changes from v1:** Kartoffel–Gurke and Kartoffel–Himbeere removed (no source found); Erdbeere–Kartoffel/Tomate/Himbeere and Paprika–Gurke/Möhre/Erdbeere added.
 
-### 5.5 Toxicity & storage (v1 texts, not yet checked against a source)
+### 5.5 Toxicity & storage
+> **P1:** checked against sources (BfR, BZfE via Öko-Test, Verbraucherzentrale NRW, BMLUK, TFA-Wissen) and corrected in `src/lib/data/plants.ts` – that file is now the reference. The table below is the original v1 draft. Unsupported claims were removed (e.g. "Paprika: grüne Teile leicht giftig", fixed storage temperatures); texts without a specific source are marked `Praxis`.
+
 | Art | Giftig | Lagerung |
 |---|---|---|
 | Tomate | Grüne Teile, unreife Früchte (Solanin/Tomatin) | 12–16 °C, nicht in den Kühlschrank, grüne nachreifen lassen |
@@ -286,10 +288,12 @@ Nachtschatten 3 · **Kürbisgewächse 4** (Plantura) · **Kreuzblütler 4** (inc
 | Erdbeere / Himbeere | – | kaum lagerbar, 1–2 Tage kühl, einfrieren |
 | Paprika / Chili | grüne Teile leicht giftig; Chili: Capsaicin – Handschuhe | Paprika 8–10 °C ~1 W; Chili trocknen/einfrieren |
 
-### 5.6 Still to do in P1
-- Check toxicity (BfR / Giftinformationszentrum) and storage texts (BZfE) against a source before they go into the database
-- Environment fields from §8.2 (minimum temperature, germination temperature, soil moisture); germination temperatures already known: Tomate 20–22 °C, Gurke 20–24 °C, Paprika/Chili 25–28 °C
-- Heights/widths for the plant card
+### 5.6 Status after P1
+- ✅ Toxicity and storage texts checked against sources
+- ✅ Germination temperatures (Tomate, Gurke, Paprika, Chili) and minimum soil temperatures (Gurke 14 °C, Kartoffel 7 °C) filled in
+- Open: other environment fields from §8.2 (minimum temperature, soil moisture, light) → P7
+- Open: heights/widths for the plant card (no reliable source per species yet; heights depend strongly on the variety)
+- Open: `setWeightG` for seed potatoes (needed for the shopping list in P5)
 
 > **Greenhouse:** the order Tomate | Paprika | Chili | Gurke has only good neighbours next to each other. Tomate and Gurke must not be in neighbouring rows.
 
