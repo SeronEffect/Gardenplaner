@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Open |
+| Status | Fixed (PR #4, waiting for merge) |
 | Reported | 06.11.2026 |
 | Branch / commit | main @ def7f70 |
 | Area | Gartenplan – row form, garden map, space rules |
@@ -36,7 +36,14 @@ A planting may cover **several neighbouring rows of the same crop**. The width s
 Alternatives considered: an explicit `rowCount` column (redundant to the width, needs a migration); filling the empty bed automatically by default (surprising when several crops are planned) – both rejected.
 
 ## Report
-- Result: _pending_
-- Verified: _pending_
-- PR: _pending_
-- Open points: _pending_
+- Result: **Successful** – a single planting can now cover several rows up to the whole bed; plant counts and limits match the covered rows; no schema change, existing rows stay valid (they keep their width → 1 row).
+- Verified:
+  - 4 new unit tests in `src/lib/rules/space.test.ts` (rows from width, plants over all rows, free width, count limit over all rows) – failed before the fix, pass after; 45/45 tests
+  - `pnpm check` 0 errors, `pnpm build` OK
+  - Reproduction re-run on a fresh DB: Beet 1 + Kartoffel → "Restliche Breite füllen" → 400 cm = 6 Reihen, "volle Länge (78 Pflanzen)", saved as "6 Reihen · volle Länge (78 Pflanzen) · 0–400 cm"; map fills the bed with row dividers; 79 plants rejected ("maximal 78"), 78 accepted; Möhre "Reihen = 3" → 75 cm; no console errors
+  - Desktop (1440 px) and phone (iPhone 13) screenshots checked
+- PR: https://github.com/SeronEffect/Gardenplaner/pull/4
+- Open points:
+  - PR #3 (tasks) also changes `savePlanting` in `src/lib/server/garden.ts` → possible small merge conflict; keep both changes.
+  - The map shows a single day (slider). Rows outside that day look empty – a "ganze Saison" view could help (not part of this fix).
+  - Shopping list (P5) must use `rows × length` per planting.
