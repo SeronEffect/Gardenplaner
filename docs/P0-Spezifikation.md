@@ -136,12 +136,12 @@ Rows always run **along `lengthCm`**; they are stacked across `widthCm`.
 ### Season
 `year`, `status HISTORY | PLANNING | ACTIVE | ARCHIVED`. 2026 = HISTORY.
 
-### Planting (= one row of one crop)
+### Planting (= one or more neighbouring rows of one crop)
 | Field | Note |
 |---|---|
 | `seasonId`, `bedId`, `speciesId`, `varietyId?`, `routeId` | |
 | `offsetCm` | position across the bed (from the top/left edge) |
-| `widthCm` | default = `rowSpacingCm` |
+| `widthCm` | default = `rowSpacingCm`; a wider planting covers several rows: `rows = floor(widthCm / rowSpacingCm)`, at least 1 (bug-fix-001) |
 | `quantityMode` | `FULL_ROW \| COUNT` |
 | `count?` | for COUNT; row length = count × `inRowSpacingCm` |
 | `startDate`, `endDate` | time the row is taken in the bed (calculated from the route, can be moved by hand) |
@@ -172,8 +172,9 @@ Rows always run **along `lengthCm`**; they are stacked across `widthCm`.
 ### 4.1 Space check
 - `offsetCm + widthCm ≤ bed.widthCm`
 - no overlap with another planting
-- COUNT: `count × inRowSpacing ≤ bed.lengthCm`
-- FULL_ROW: `count = floor(lengthCm / inRowSpacingCm)`
+- COUNT: `count ≤ rows × floor(lengthCm / inRowSpacingCm)`
+- FULL_ROW ("volle Länge"): `count = rows × floor(lengthCm / inRowSpacingCm)`
+- The row form offers "Reihen" and "Restliche Breite füllen" (free width from the position to the next row or the bed edge)
 
 ### 4.2 Crop rotation
 For a new planting P in bed B, take every planting H with the same position across the bed and an `endDate` within the last `family.rotationPauseYears` years:
