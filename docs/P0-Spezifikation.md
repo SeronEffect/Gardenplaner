@@ -1,6 +1,6 @@
 # Gardenplaner – Phase 0: Specification
 
-Status: v4 · 04.11.2026 (v2: clean start, environment data §8 · v3: plant data with sources §5 · v4: sensor hardware §8.2)
+Status: v5 · 04.11.2026 (v2: clean start, environment data §8 · v3: plant data with sources §5 · v4/v5: sensor hardware FYTA §8.2)
 Scope: data model, rules engine, starting plant data, screens. No code yet.
 
 ---
@@ -136,12 +136,12 @@ Rows always run **along `lengthCm`**; they are stacked across `widthCm`.
 ### Season
 `year`, `status HISTORY | PLANNING | ACTIVE | ARCHIVED`. 2026 = HISTORY.
 
-### Planting (= one row of one crop)
+### Planting (= one or more neighbouring rows of one crop)
 | Field | Note |
 |---|---|
 | `seasonId`, `bedId`, `speciesId`, `varietyId?`, `routeId` | |
 | `offsetCm` | position across the bed (from the top/left edge) |
-| `widthCm` | default = `rowSpacingCm` |
+| `widthCm` | default = `rowSpacingCm`; a wider planting covers several rows: `rows = floor(widthCm / rowSpacingCm)`, at least 1 (bug-fix-001) |
 | `quantityMode` | `FULL_ROW \| COUNT` |
 | `count?` | for COUNT; row length = count × `inRowSpacingCm` |
 | `startDate`, `endDate` | time the row is taken in the bed (calculated from the route, can be moved by hand) |
@@ -172,18 +172,26 @@ Rows always run **along `lengthCm`**; they are stacked across `widthCm`.
 ### 4.1 Space check
 - `offsetCm + widthCm ≤ bed.widthCm`
 - no overlap with another planting
-- COUNT: `count × inRowSpacing ≤ bed.lengthCm`
-- FULL_ROW: `count = floor(lengthCm / inRowSpacingCm)`
+- COUNT: `count ≤ rows × floor(lengthCm / inRowSpacingCm)`
+- FULL_ROW ("volle Länge"): `count = rows × floor(lengthCm / inRowSpacingCm)`
+- The row form offers "Reihen" and "Restliche Breite füllen" (free width from the position to the next row or the bed edge)
 
 ### 4.2 Crop rotation
 For a new planting P in bed B, take every planting H with the same position across the bed and an `endDate` within the last `family.rotationPauseYears` years:
 - `H.family == P.family` → **STRICT: blocked · WARN: warning + task "Erde tauschen / Kompost" · OFF: no check**
 - Score for feeding order (heavy → medium → light → green manure → heavy): previous main crop is the expected predecessor = +2, same feeding type again = −1.
 - Perennials (Erdbeere, Himbeere) stay in place for every year they span → they block the space and are not rotated.
+- *(P4)* Checked in both directions (what grew here before and what is planned later); "frei ab" = end of the earlier crop + pause.
+- *(P4)* Exception: the **same species again in the same season** (succession, re-sowing) is not a conflict. Another species of the family still is (Gelbsenf after Radieschen).
+- *(P4)* Rows in a HISTORY season are never blocked, only warned (history is what really happened).
+- *(P4)* Feeding order uses the last main crop on the space within ~1.5 years; green manure is skipped as predecessor. Expected: Stark ← Schwach/Gründüngung, Mittel ← Stark, Schwach ← Mittel.
+- *(P4)* WARN/STRICT: a planting that follows the same family gets the task "Erde tauschen / Kompost einarbeiten" in the 2 weeks before planting.
+- Code: `src/lib/rules/rotation.ts`; shown live in the row form (red = blocked, orange = warning, green = good).
 
 ### 4.3 Neighbours
 Rows **directly next to each other** in the same bed (gap between row edges ≤ 10 cm) that overlap in time:
 `GOOD` +1 · `BAD` −3 + warning. Shown live while dragging.
+*(P4)* Same species next to each other is ignored; several sets of one crop count once. Bad neighbours warn but never block.
 
 ### 4.4 Task generation
 - Each `CultureStep` of a planting's route → task with a window `[anchor+offsetStart, anchor+offsetEnd]`.
@@ -198,9 +206,11 @@ When a planting is set to DONE (or the planner finds a free space) and the gap u
 - Suggest a green manure that fits the season (Phacelia A. Apr–E. Mai / A. Aug–E. Sep, Gelbsenf Aug–A. Okt).
 - **Exclude cross-family conflicts:** no Gelbsenf if a Kreuzblütler (cabbage, Radieschen) is coming next or grew there recently.
 - Green manure is a normal planting → it counts for rotation and the bed history.
+- *(P4)* Shown on the bed page as "Gründüngung möglich" per free space (one button per fitting green manure, Phacelia first). Only outdoor beds and non-history seasons. The green manure ends the day before the next crop. Code: `greenManureSuggestions` in `src/lib/rules/succession.ts`.
 
 ### 4.6 Succession growing
 A series creates n plantings with `firstDate + i × intervalDays`. Moving or deleting one asks: "nur diesen Satz / alle folgenden".
+*(P4)* Each set stays in the first row if it is free again, otherwise it moves to the next free space across the bed; the form shows the sets before saving. Nothing is saved if one set does not fit. "alle folgenden" moves the later sets by the same number of days and takes over crop, route, width and quantity; each set keeps its row. Table `succession_series` (bed, species, interval, count), `plantings.succession_series_id`.
 
 ### 4.7 Shopping list (no stock)
 Generated per season from all PLANNED plantings, grouped by `kind`:
@@ -328,38 +338,46 @@ The old prototype was removed on 03.11.2026; we start clean. Weather and sensors
 ### 8.1 Architecture
 ```
 Open-Meteo API ──(scheduler, every 3 h)──┐
-Sensors (ESP32 …) ──HTTPS POST + token──►├─ app (SvelteKit) ─ Postgres
+FYTA cloud API ──(poll every 30 min)─────►├─ app (SvelteKit) ─ Postgres
                                           │   ├─ ingest  /api/ingest/readings
                                           │   ├─ jobs    weather · aggregation · alerts · task regeneration
                                           │   └─ rules   + environment rules
 ```
 - **Weather:** Open-Meteo (free, no API key, forecast + history, uses DWD models). Stores the forecast for 7 days and daily values.
-- **Sensors:** a simple HTTPS endpoint with a token per device. An MQTT or LoRaWAN webhook (TTN) can be added as a second way in later, depending on the hardware (§9).
+- **Sensors:** FYTA sensors → FYTA cloud → polled by the app (§8.2). A direct HTTPS ingest stays possible for other sensors.
 - **DB:** **Postgres** (instead of SQLite): handles the time series, and runs as a managed service or as a container when hosted online. Plain tables + indexes are enough for this amount of data; TimescaleDB is optional.
 - **Jobs** run in the app (node-cron); no separate service needed.
 
 ### 8.2 Additional entities
-**Hardware setup (decided 04.11.2026):** one sensor device per bed (incl. greenhouse), battery-powered, reports nutrients, humidity, temperature, brightness and its battery level. A 5G router with fixed power at the allotment provides Wi-Fi → devices send via HTTPS directly to the app (the app must be reachable online → hosting in P6).
+**Hardware: FYTA (decided 04.11.2026)**
+| Device | Where | Measures | Connection |
+|---|---|---|---|
+| **FYTA Terra** | one per bed (Beet 1, Beet 2, fence beds) | soil moisture (VWC), salinity/nutrients (EC), light (PPFD/DLI), soil + ambient temperature | Wi-Fi directly, solar + rechargeable battery, built for vegetable beds |
+| **FYTA Beam G2** | greenhouse / pots | as Terra | Bluetooth → FYTA Wi-Fi Hub; not fully waterproof → only in the greenhouse, not in open beds |
+| **FYTA Sphere** (optional) | greenhouse | light, temperature, air humidity | Bluetooth → Hub |
+
+Consequences for the app:
+- **No direct ingest:** FYTA sensors send to the FYTA cloud only (the raw data is processed there). The app **polls the FYTA API** (`POST /api/auth/login` with the FYTA account → bearer token; `GET /api/user-plant`, `/api/user-plant/{id}`, measurements per plant) – the same API the Home Assistant integration uses.
+- **Mapping:** each sensor is a "plant" in the FYTA app → in the Gardenplaner it is linked to one bed (`SensorDevice.fytaPlantId`).
+- **Values available:** moisture %, salinity/EC (mS/cm), temperature, light as PAR/DLI (not lux), battery %, FYTA status per value (too low … too high). **No N/P/K** – nutrients only as EC. **Air humidity only with the Sphere.**
+- **Network:** the FYTA Hub and the Terra only support **2.4 GHz Wi-Fi** → the 5G router must offer a 2.4 GHz network.
+- **Risk:** the FYTA API is published by FYTA but not a versioned contract; if it changes, only the polling adapter has to be adapted. The FYTA login is stored as a secret (env), never in the DB in plain text.
 
 | Entity | Fields |
 |---|---|
-| **SensorDevice** | `nameDe`, `bedId` (one device per bed), `deviceKey`, `tokenHash`, `batteryPct`, `lastSeenAt`, `firmware?`, `active` |
+| **SensorDevice** | `nameDe`, `bedId` (one device per bed), `provider FYTA \| HTTP`, `fytaPlantId?`, `model` (Terra/Beam/Sphere), `batteryPct`, `lastSeenAt`, `active` |
 | **Reading** | `deviceId`, `kind`, `ts`, `value` – raw values, kept **90 days** |
-| **ReadingHourly** | `deviceId`, `kind`, `hour`, `min`, `max`, `avg` – kept permanently (light: + `luxHours`) |
+| **ReadingHourly** | `deviceId`, `kind`, `hour`, `min`, `max`, `avg` – kept permanently |
 | **WeatherForecast** | `fetchedAt`, `ts`, `tempC`, `precipMm`, `sunshineMin`, `windKmh`, `soilTempC?` |
 | **WeatherDaily** | `date`, `tMinC`, `tMaxC`, `precipMm`, `sunshineH`, `source FORECAST \| OBSERVED` |
 | **EnvRule** | `type FROST \| GH_HEAT \| DRY_SOIL \| LOW_LIGHT \| LOW_NUTRIENTS \| LOW_BATTERY \| SENSOR_OFFLINE`, `scope (garden/bed)`, `threshold`, `active` |
 | **Alert** | `envRuleId`, `bedId?`, `triggeredAt`, `messageDe`, `resolvedAt?`, `taskId?` |
 
-`kind` = `SOIL_MOISTURE` (%) · `AIR_HUMIDITY` (%) · `SOIL_TEMP` / `AIR_TEMP` (°C) · `LIGHT_LUX` (lx) · `EC` (µS/cm) · `N` / `P` / `K` (mg/kg) · `BATTERY` (%). New kinds can be added without a schema change.
+`kind` = `SOIL_MOISTURE` (%) · `EC` (mS/cm) · `SOIL_TEMP` / `AIR_TEMP` (°C) · `LIGHT_PAR` (µmol/m²·h) · `DLI` (mol/m²·d) · `AIR_HUMIDITY` (%, Sphere) · `BATTERY` (%). New kinds can be added without a schema change.
 
-Ingest (one request per measurement cycle):
-```
-POST /api/ingest   Authorization: Bearer <device token>
-{ "device": "beet-1", "ts": "2027-05-12T06:00:00Z",
-  "values": { "SOIL_MOISTURE": 31.5, "SOIL_TEMP": 12.1, "LIGHT_LUX": 18400, "EC": 640, "BATTERY": 87 } }
-```
-Note on nutrients: low-cost soil "NPK" sensors usually estimate N/P/K from conductivity (EC). The app therefore treats EC as the main value and N/P/K only as a trend, not as a lab value; soil tests in the logbook stay the reference.
+Polling job: every 30 min `GET /api/user-plant` → for each linked plant read the latest values and battery, store them as Readings (deduplicated by timestamp). FYTA sensors measure about 4× per hour; the Hub uploads roughly hourly.
+
+A generic `POST /api/ingest` (token per device) stays possible as a second provider (`HTTP`) for other sensors later.
 
 **New species fields (filled in P1 if known):** `minTempC` (frost/cold tolerance), `minSoilTempSowC` (soil temperature needed for germination), `soilMoisture LOW|MEDIUM|HIGH`, `light FULL|PARTIAL|SHADE`, `ghMaxTempC`.
 
@@ -370,7 +388,7 @@ Note on nutrients: low-cost soil "NPK" sensors usually estimate N/P/K from condu
 - **Sowing time:** direct sowing is only suggested when the soil temperature (sensor or Open-Meteo) has stayed ≥ `minSoilTempSowC` for 3 days → the task window can move earlier or later ("Möhren säen: Boden jetzt warm genug").
 - **Light:** sum of light hours per bed → check "sun / partial shade" against reality.
 - **Logbook/statistics:** weather and sensor values linked to harvest amounts per season.
-- **Nutrients:** EC trend falls clearly over several weeks during the main season → note "Düngen prüfen" for the bed (complements the fertilizing interval from §4.4).
+- **Nutrients:** EC (salinity) trend falls clearly over several weeks during the main season → note "Düngen prüfen" for the bed (complements the fertilizing interval from §4.4).
 - **Battery:** below 20 % → note "Akku laden/tauschen" for the device.
 - **Sensor offline:** no value for > 6 h → note on the dashboard.
 
@@ -382,7 +400,7 @@ Note on nutrients: low-cost soil "NPK" sensors usually estimate N/P/K from condu
 ---
 
 ## 9. Open points
-1. ~~Sensors / network~~ → one device per bed, 5G router with Wi-Fi (§8.2). Still open: humidity of the soil or the air (default: soil moisture), sensor model/hardware
+1. ~~Sensors / network~~ → FYTA Terra per bed, Beam G2 (+ optional Sphere) in the greenhouse, 5G router with 2.4 GHz Wi-Fi (§8.2)
 2. ~~Power and network~~ → decided
 3. ~~Check timing values / neighbours~~ → done in v3 with sources (§5)
 4. ~~Bed list~~ → 2 beds 4 × 4 m, greenhouse, strawberry bed and raspberry bed (3 m) at the fence; exact sizes/positions of greenhouse and fence beds still to be entered in the app

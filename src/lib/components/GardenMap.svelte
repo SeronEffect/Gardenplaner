@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { plantColor } from '../data/colors.ts';
 	import { formatIsoDate } from '../i18n/de.ts';
+	import { rowsInWidth } from '../rules/space.ts';
 
 	interface Bed {
 		id: number;
@@ -20,6 +21,7 @@
 		quantityMode: 'FULL_ROW' | 'COUNT';
 		count: number | null;
 		inRowSpacingCm: number | null;
+		rowSpacingCm?: number | null;
 		speciesSlug: string;
 		speciesDe: string;
 		startDate: string;
@@ -56,6 +58,17 @@
 		return b.rowDirection === 'HORIZONTAL'
 			? { x: b.xCm, y: b.yCm + r.offsetCm, w: len, h: r.widthCm, vertical: false }
 			: { x: b.xCm + r.offsetCm, y: b.yCm, w: r.widthCm, h: len, vertical: true };
+	}
+
+	/** Divider lines between the rows of a multi-row planting (bug-fix-001) */
+	function dividers(rr: { x: number; y: number; w: number; h: number; vertical: boolean }, r: Row) {
+		const n = rowsInWidth(r.widthCm, r.rowSpacingCm);
+		const step = (rr.vertical ? rr.w : rr.h) / n;
+		return Array.from({ length: n - 1 }, (_, k) =>
+			rr.vertical
+				? { x1: rr.x + step * (k + 1), y1: rr.y, x2: rr.x + step * (k + 1), y2: rr.y + rr.h }
+				: { x1: rr.x, y1: rr.y + step * (k + 1), x2: rr.x + rr.w, y2: rr.y + step * (k + 1) }
+		);
 	}
 
 	const rowsByBed = $derived(
@@ -95,6 +108,9 @@
 				<rect x={rr.x} y={rr.y} width={rr.w} height={rr.h} fill={c.bg} stroke="#fff" stroke-width="3">
 					<title>{r.speciesDe}: {formatIsoDate(r.startDate)} – {formatIsoDate(r.endDate)}</title>
 				</rect>
+				{#each dividers(rr, r) as l, k (k)}
+					<line {...l} stroke="#ffffff" stroke-opacity="0.7" stroke-width="3" stroke-dasharray="12 8" />
+				{/each}
 				{#if (rr.vertical ? rr.w : rr.h) >= font * 1.3}
 					{#if rr.vertical}
 						<text

@@ -1,8 +1,10 @@
 // Database schema. Phase 1: plant knowledge + settings. Phase 2: beds, seasons, plantings.
+// Phase 3: tasks. Phase 4: succession series.
 // Later phases (tasks, log, sensors …) follow the spec, see docs/P0-Spezifikation.md §3 and §8.
 import {
 	boolean,
 	date,
+	index,
 	integer,
 	pgEnum,
 	pgTable,
@@ -232,5 +234,57 @@ export const plantings = pgTable('plantings', {
 	endDate: date('end_date', { mode: 'string' }).notNull(),
 	sourcing: sourcing('sourcing').notNull().default('SEED'),
 	status: plantingStatus('status').notNull().default('PLANNED'),
+	/** Set when the planting is one set of a succession series (phase 4) */
+	successionSeriesId: integer('succession_series_id').references(() => successionSeries.id, { onDelete: 'set null' }),
 	notesDe: text('notes_de')
 });
+
+// ── Phase 4: succession growing (spec §3 SuccessionSeries, §4.6) ───────────
+export const successionSeries = pgTable('succession_series', {
+	id: serial('id').primaryKey(),
+	bedId: integer('bed_id')
+		.notNull()
+		.references(() => beds.id, { onDelete: 'cascade' }),
+	speciesId: integer('species_id')
+		.notNull()
+		.references(() => species.id),
+	intervalDays: smallint('interval_days').notNull(),
+	count: smallint('count').notNull()
+});
+
+// ── Phase 3: tasks (spec §3, §4.4) ──────────────────────────────────────────
+export const taskType = pgEnum('task_type', [
+	'PRESOW',
+	'PRICK_OUT',
+	'PRESPROUT',
+	'HARDEN_OFF',
+	'DIRECT_SOW',
+	'PLANT_OUT',
+	'CARE',
+	'FERTILIZE',
+	'PRUNE',
+	'HARVEST',
+	'CLEAR',
+	'MANUAL'
+]);
+export const taskStatus = pgEnum('task_status', ['OPEN', 'DONE', 'SKIPPED']);
+
+export const tasks = pgTable(
+	'tasks',
+	{
+		id: serial('id').primaryKey(),
+		plantingId: integer('planting_id').references(() => plantings.id, { onDelete: 'cascade' }),
+		bedId: integer('bed_id').references(() => beds.id, { onDelete: 'cascade' }),
+		type: taskType('type').notNull(),
+		location: stepLocation('location').notNull().default('BED'),
+		titleDe: text('title_de').notNull(),
+		dueStart: date('due_start', { mode: 'string' }).notNull(),
+		dueEnd: date('due_end', { mode: 'string' }).notNull(),
+		status: taskStatus('status').notNull().default('OPEN'),
+		doneAt: date('done_at', { mode: 'string' }),
+		/** Set for generated tasks (see rules/tasks.ts); null = added by hand */
+		generatedKey: text('generated_key').unique(),
+		notesDe: text('notes_de')
+	},
+	(t) => [index('tasks_due').on(t.dueStart, t.dueEnd)]
+);

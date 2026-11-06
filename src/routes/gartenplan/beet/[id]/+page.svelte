@@ -2,6 +2,7 @@
 	import BedForm from '#lib/components/BedForm.svelte';
 	import PlantingForm from '#lib/components/PlantingForm.svelte';
 	import { plantColor } from '#lib/data/colors.ts';
+	import { plantsInPlanting, rowsInWidth } from '#lib/rules/space.ts';
 	import { BED_TYPE, FEEDING, PLANTING_STATUS, ROTATION_MODE, SUN, formatIsoDate, formatMetres } from '#lib/i18n/de.ts';
 	import type { PageProps } from './$types';
 
@@ -25,6 +26,18 @@
 	const others = $derived(data.history.map((p) => ({ ...p, label: `${p.speciesDe} (${p.offsetCm}–${p.offsetCm + p.widthCm} cm)` })));
 
 	let confirmDelete = $state(false);
+
+	/** "Satz 2/4" for plantings of a succession series */
+	function setLabel(p: { id: number; successionSeriesId: number | null }) {
+		if (!p.successionSeriesId) return '';
+		const sets = data.history
+			.filter((h) => h.successionSeriesId === p.successionSeriesId)
+			.sort((a, b) => a.startDate.localeCompare(b.startDate));
+		return `Satz ${sets.findIndex((h) => h.id === p.id) + 1}/${sets.length} · `;
+	}
+	// One entry per free space, with a button per fitting green manure
+	const gmGroups = $derived([...Map.groupBy(data.greenManure, (g) => String(g.afterId)).entries()]);
+	const gap = (d: number | null) => (d === null ? 'bis zum Winter frei' : `${Math.round(d / 7)} Wochen frei`);
 </script>
 
 <svelte:head>
@@ -49,10 +62,12 @@
 				<div class="info">
 					<strong>{r.speciesDe}</strong>
 					<span class="muted"
-						>{r.quantityMode === 'COUNT' ? `${r.count} Pflanzen` : 'volle Reihe'} · {r.offsetCm}–{r.offsetCm +
+						>{rowsInWidth(r.widthCm, r.rowSpacingCm) > 1 ? `${rowsInWidth(r.widthCm, r.rowSpacingCm)} Reihen · ` : ''}{r.quantityMode === 'COUNT'
+							? `${r.count} Pflanzen`
+							: `volle Länge${plantsInPlanting(bed.lengthCm, r.widthCm, r.rowSpacingCm, r.inRowSpacingCm) ? ` (${plantsInPlanting(bed.lengthCm, r.widthCm, r.rowSpacingCm, r.inRowSpacingCm)} Pflanzen)` : ''}`} · {r.offsetCm}–{r.offsetCm +
 							r.widthCm} cm vom Rand{r.routeDe ? ` · ${r.routeDe}` : ''}</span
 					>
-					<span class="muted">{formatIsoDate(r.startDate)} – {formatIsoDate(r.endDate)} · {PLANTING_STATUS[r.status]}</span>
+					<span class="muted">{setLabel(r)}{formatIsoDate(r.startDate)} – {formatIsoDate(r.endDate)} · {PLANTING_STATUS[r.status]}</span>
 					{#if r.notesDe}<span class="muted">{r.notesDe}</span>{/if}
 				</div>
 				<div class="actions">
@@ -69,6 +84,47 @@
 	<p class="muted">In {year} ist hier noch nichts geplant.</p>
 {/if}
 
+{#if data.greenManure.length && season}
+	<section class="gm" aria-label="Gründüngung">
+		<h3>Gründüngung möglich</h3>
+		{#if form?.form === 'gruen'}
+			<ul class="errors" role="alert">{#each form.errors as e, n (n)}<li>{e}</li>{/each}</ul>
+		{/if}
+		<ul>
+			{#each gmGroups as [key, opts] (key)}
+				{@const g = opts[0]}
+				<li>
+					<div>
+						Nach <strong>{g.afterDe}</strong>
+						<span class="muted"
+							>· {g.offsetCm}–{g.offsetCm + g.widthCm} cm · ab {formatIsoDate(g.startDate)} · {gap(g.gapDays)}</span
+						>
+					</div>
+					<div class="gm-actions">
+						{#each opts as o (o.speciesId)}
+							<form method="POST" action="?/gruenduengung&{q}">
+								<input type="hidden" name="seasonId" value={season.id} />
+								<input type="hidden" name="speciesId" value={o.speciesId} />
+								<input type="hidden" name="routeId" value={o.routeId} />
+								<input type="hidden" name="offsetCm" value={o.offsetCm} />
+								<input type="hidden" name="widthCm" value={o.widthCm} />
+								<input type="hidden" name="startDate" value={o.startDate} />
+								<input type="hidden" name="endDate" value={o.endDate} />
+								<input type="hidden" name="quantityMode" value="FULL_ROW" />
+								<input type="hidden" name="sourcing" value="SEED" />
+								<input type="hidden" name="status" value="PLANNED" />
+								<button class="btn" type="submit" title="{formatIsoDate(o.startDate)} – {formatIsoDate(o.endDate)}"
+									>{o.speciesDe} einplanen</button
+								>
+							</form>
+						{/each}
+					</div>
+				</li>
+			{/each}
+		</ul>
+	</section>
+{/if}
+
 {#if season}
 	<details open={form?.form === 'reihe' || rows.length === 0}>
 		<summary>+ Reihe hinzufügen</summary>
@@ -82,6 +138,9 @@
 			frost={data.frost}
 			species={data.species}
 			{others}
+			companions={data.companions}
+			historySeason={season.status === 'HISTORY'}
+			allowSuccession
 			errors={form?.form === 'reihe' ? form.errors : []}
 			submitLabel="Reihe anlegen"
 		/>
@@ -198,6 +257,41 @@
 		font-size: 13px;
 		width: 100%;
 		justify-content: center;
+	}
+	.gm > ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.gm li {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 10px;
+		padding: 8px 0;
+		border-top: 1px solid var(--line-soft);
+		font-size: 14px;
+	}
+	.gm form {
+		margin: 0;
+	}
+	.gm-actions {
+		display: flex;
+		gap: 6px;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+	}
+	.gm .btn {
+		min-height: 34px;
+		padding: 4px 12px;
+		font-size: 13px;
+	}
+	.errors {
+		background: var(--bad-bg);
+		border: 1px solid var(--bad-line);
+		border-radius: 8px;
+		padding: 8px 12px 8px 28px;
+		font-size: 14px;
 	}
 	details {
 		border: 1px solid var(--line-soft);

@@ -43,3 +43,15 @@ export function readPlantingForm(
 	};
 	return { values: f.errors.length ? null : values, errors: f.errors };
 }
+
+/** Succession fields of the "new row" form (spec §4.6); null = a single row. */
+export function readSuccessionForm(fd: FormData): { sets: number; intervalDays: number; errors: string[] } | null {
+	const f = new FormReader(fd);
+	if (!f.bool('succession')) return null;
+	const sets = f.int('sets', 'Anzahl Sätze', { required: true, min: 2, max: 12 }) ?? 0;
+	const intervalDays = f.int('intervalDays', 'Abstand der Sätze', { required: true, min: 7, max: 60 }) ?? 0;
+	return { sets, intervalDays, errors: f.errors };
+}
+
+/** "nur diesen Satz" / "alle folgenden" */
+export const readScope = (fd: FormData) => (fd.get('scope') === 'following' ? 'following' : 'one');

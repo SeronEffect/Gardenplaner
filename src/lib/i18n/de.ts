@@ -62,7 +62,7 @@ export const NAV = [
 	{ href: '/saisonplanung', label: 'Saisonplanung', phase: 5 },
 	{ href: '/kalender', label: 'Kalender', phase: 3 },
 	{ href: '/pflanzen', label: 'Pflanzen', phase: 1 },
-	{ href: '/tagebuch', label: 'Tagebuch', phase: 3 }
+	{ href: '/tagebuch', label: 'Tagebuch', phase: 4 }
 ] as const;
 
 /** 15.03. */
@@ -121,4 +121,33 @@ export function formatIsoDate(iso: string): string {
 /** 400 → "4,0 m" */
 export function formatMetres(cm: number): string {
 	return `${(cm / 100).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} m`;
+}
+
+export const WEEKDAYS_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+export const TASK_CATEGORY: Record<string, { label: string; color: string }> = {
+	sow: { label: 'Säen', color: '#2f855a' },
+	plant: { label: 'Pflanzen', color: '#c05621' },
+	care: { label: 'Pflege', color: '#6b7a5e' },
+	fertilize: { label: 'Düngen', color: '#8a6d1f' },
+	harvest: { label: 'Ernte', color: '#c53030' },
+	after: { label: 'Nachsorge', color: '#5a67a8' },
+	own: { label: 'Eigene', color: '#2b6cb0' }
+};
+
+/** Where a task happens: windowsill or the bed (the greenhouse is a bed) */
+export function taskPlace(t: { location: string; bedName: string | null }): string {
+	return t.location === 'WINDOWSILL' ? 'Fensterbank' : (t.bedName ?? 'Allgemein');
+}
+
+/** "10.05." */
+export function formatShort(iso: string): string {
+	return `${iso.slice(8, 10)}.${iso.slice(5, 7)}.`;
+}
+
+/** "10.–16.05.2027" / "28.04.–04.05.2027" */
+export function formatWeekRange(monday: string, sunday: string): string {
+	return monday.slice(5, 7) === sunday.slice(5, 7)
+		? `${monday.slice(8, 10)}.–${formatIsoDate(sunday)}`
+		: `${formatShort(monday)}–${formatIsoDate(sunday)}`;
 }

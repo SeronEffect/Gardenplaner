@@ -15,6 +15,20 @@
       "when": 1793779779810,
       "tag": "0001_garden",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793781290513,
+      "tag": "0002_tasks",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793973970042,
+      "tag": "0003_succession",
+      "breakpoints": true
     }
   ]
 }

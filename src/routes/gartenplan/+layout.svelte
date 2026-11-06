@@ -95,27 +95,6 @@
 	form {
 		margin: 0;
 	}
-	:global(.btn) {
-		display: inline-flex;
-		align-items: center;
-		min-height: 40px;
-		padding: 8px 14px;
-		border-radius: 8px;
-		border: 1px solid var(--green);
-		background: #fff;
-		color: var(--green);
-		text-decoration: none;
-		font-size: 14px;
-		cursor: pointer;
-	}
-	:global(.btn.primary) {
-		background: var(--green);
-		color: #fff;
-	}
-	:global(.btn.danger) {
-		border-color: #b4423a;
-		color: #b4423a;
-	}
 	.split {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
