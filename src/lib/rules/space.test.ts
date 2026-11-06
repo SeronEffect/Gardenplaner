@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { checkRow, nextFreeOffset, plantingWindow, plantsPerRow, rowsOverlap, type RowLike } from './space.ts';
+import {
+	checkRow,
+	freeWidthAt,
+	nextFreeOffset,
+	plantingWindow,
+	plantsInPlanting,
+	plantsPerRow,
+	rowsInWidth,
+	rowsOverlap,
+	type RowLike
+} from './space.ts';
 import { DEFAULT_FROST } from './timeline.ts';
 import { SPECIES } from '../data/plants.ts';
 
@@ -39,7 +49,7 @@ describe('checkRow', () => {
 	});
 
 	it('rejects too many plants for the row length', () => {
-		const issues = checkRow(bed, row({ quantityMode: 'COUNT', count: 7, widthCm: 60 }), [], 60);
+		const issues = checkRow(bed, row({ quantityMode: 'COUNT', count: 7, widthCm: 60 }), [], { inRowSpacingCm: 60, rowSpacingCm: 60 });
 		expect(issues.map((i) => i.kind)).toEqual(['TOO_LONG']);
 		expect(issues[0].messageDe).toContain('maximal 6');
 	});
@@ -92,5 +102,39 @@ describe('plantingWindow', () => {
 			startDate: '2027-07-01',
 			endDate: '2031-07-01'
 		});
+	});
+});
+
+// bug-fix-001: one planting may cover several neighbouring rows of the same crop
+
+describe('multi-row plantings (bug-fix-001)', () => {
+	it('derives the number of rows from the width', () => {
+		expect(rowsInWidth(60, 60)).toBe(1);
+		expect(rowsInWidth(400, 60)).toBe(6);
+		expect(rowsInWidth(30, 60)).toBe(1); // never less than one row
+		expect(rowsInWidth(90, null)).toBe(1);
+	});
+
+	it('counts the plants of all rows', () => {
+		// Kartoffel 60 × 30 in a 4 × 4 m bed: 6 rows × 13 plants
+		expect(plantsInPlanting(400, 400, 60, 30)).toBe(78);
+		expect(plantsInPlanting(400, 60, 60, 30)).toBe(13);
+		expect(plantsInPlanting(400, 60, 60, null)).toBeNull();
+	});
+
+	it('finds the free width from a position to the next row or the bed edge', () => {
+		expect(freeWidthAt(bed, 0, '2027-05-01', '2027-06-01', [])).toBe(400);
+		const others = [row({ offsetCm: 200, widthCm: 50 })];
+		expect(freeWidthAt(bed, 60, '2027-05-01', '2027-06-01', others)).toBe(140);
+		expect(freeWidthAt(bed, 250, '2027-05-01', '2027-06-01', others)).toBe(150);
+		// rows at other times do not block
+		expect(freeWidthAt(bed, 60, '2027-09-01', '2027-09-30', others)).toBe(340);
+	});
+
+	it('allows the plant count of all rows', () => {
+		const wide = row({ quantityMode: 'COUNT', count: 78, widthCm: 400 });
+		expect(checkRow(bed, wide, [], { inRowSpacingCm: 30, rowSpacingCm: 60 })).toEqual([]);
+		const tooMany = row({ quantityMode: 'COUNT', count: 79, widthCm: 400 });
+		expect(checkRow(bed, tooMany, [], { inRowSpacingCm: 30, rowSpacingCm: 60 })[0].messageDe).toContain('maximal 78');
 	});
 });

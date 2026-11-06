@@ -2,6 +2,7 @@
 	import BedForm from '#lib/components/BedForm.svelte';
 	import PlantingForm from '#lib/components/PlantingForm.svelte';
 	import { plantColor } from '#lib/data/colors.ts';
+	import { plantsInPlanting, rowsInWidth } from '#lib/rules/space.ts';
 	import { BED_TYPE, FEEDING, PLANTING_STATUS, ROTATION_MODE, SUN, formatIsoDate, formatMetres } from '#lib/i18n/de.ts';
 	import type { PageProps } from './$types';
 
@@ -49,7 +50,9 @@
 				<div class="info">
 					<strong>{r.speciesDe}</strong>
 					<span class="muted"
-						>{r.quantityMode === 'COUNT' ? `${r.count} Pflanzen` : 'volle Reihe'} · {r.offsetCm}–{r.offsetCm +
+						>{rowsInWidth(r.widthCm, r.rowSpacingCm) > 1 ? `${rowsInWidth(r.widthCm, r.rowSpacingCm)} Reihen · ` : ''}{r.quantityMode === 'COUNT'
+							? `${r.count} Pflanzen`
+							: `volle Länge${plantsInPlanting(bed.lengthCm, r.widthCm, r.rowSpacingCm, r.inRowSpacingCm) ? ` (${plantsInPlanting(bed.lengthCm, r.widthCm, r.rowSpacingCm, r.inRowSpacingCm)} Pflanzen)` : ''}`} · {r.offsetCm}–{r.offsetCm +
 							r.widthCm} cm vom Rand{r.routeDe ? ` · ${r.routeDe}` : ''}</span
 					>
 					<span class="muted">{formatIsoDate(r.startDate)} – {formatIsoDate(r.endDate)} · {PLANTING_STATUS[r.status]}</span>

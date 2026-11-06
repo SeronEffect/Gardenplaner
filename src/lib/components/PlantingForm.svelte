@@ -1,7 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { PLANTING_STATUS, SOURCING } from '../i18n/de.ts';
-	import { checkRow, nextFreeOffset, plantingWindow, plantsPerRow, type RowLike } from '../rules/space.ts';
+	import {
+		checkRow,
+		freeWidthAt,
+		nextFreeOffset,
+		plantingWindow,
+		plantsInPlanting,
+		rowsInWidth,
+		type RowLike
+	} from '../rules/space.ts';
 	import type { FrostDates } from '../rules/timeline.ts';
 
 	interface SpeciesOpt {
@@ -98,7 +106,18 @@
 	let notes = $state(init.notesDe ?? '');
 
 	const sp = $derived(species.find((s) => s.id === speciesId));
-	const maxPlants = $derived(plantsPerRow(bed.lengthCm, sp?.inRowSpacingCm));
+	// A planting can cover several neighbouring rows (bug-fix-001)
+	const rows = $derived(rowsInWidth(widthCm, sp?.rowSpacingCm));
+	const maxPlants = $derived(plantsInPlanting(bed.lengthCm, widthCm, sp?.rowSpacingCm, sp?.inRowSpacingCm));
+	const otherRows = $derived(others.filter((o) => o.id !== planting?.id));
+	const free = $derived(startDate && endDate ? freeWidthAt(bed, offsetCm, startDate, endDate, otherRows) : 0);
+
+	function setRows(n: number) {
+		if (sp?.rowSpacingCm && n >= 1) widthCm = n * sp.rowSpacingCm;
+	}
+	function fillRest() {
+		if (free > 0) widthCm = free;
+	}
 
 	function apply(sId: number, rId?: number) {
 		const d = defaultsFor(sId, rId);
@@ -119,7 +138,7 @@
 					bed,
 					{ id: planting?.id, offsetCm, widthCm, quantityMode, count, startDate, endDate },
 					others,
-					sp?.inRowSpacingCm
+					{ inRowSpacingCm: sp?.inRowSpacingCm, rowSpacingCm: sp?.rowSpacingCm }
 				)
 			: []
 	);
@@ -151,7 +170,7 @@
 	<fieldset>
 		<legend>Menge</legend>
 		<label class="inline"
-			><input type="radio" name="quantityMode" value="FULL_ROW" bind:group={quantityMode} /> volle Reihe{maxPlants
+			><input type="radio" name="quantityMode" value="FULL_ROW" bind:group={quantityMode} /> volle Länge{maxPlants
 				? ` (${maxPlants} Pflanzen)`
 				: ''}</label
 		>
@@ -163,9 +182,26 @@
 		{/if}
 	</fieldset>
 
-	<div class="two">
+	<div class="three">
 		<label>Position vom Rand (cm) <input name="offsetCm" type="number" min="0" max={bed.widthCm} bind:value={offsetCm} /></label>
-		<label>Reihenbreite (cm) <input name="widthCm" type="number" min="1" max={bed.widthCm} bind:value={widthCm} /></label>
+		<label
+			>Reihen
+			<input
+				type="number"
+				min="1"
+				value={rows}
+				disabled={!sp?.rowSpacingCm}
+				oninput={(e) => setRows(Number(e.currentTarget.value))}
+			/>
+		</label>
+		<label>Breite gesamt (cm) <input name="widthCm" type="number" min="1" max={bed.widthCm} bind:value={widthCm} /></label>
+	</div>
+	<div class="fill">
+		<span class="muted"
+			>{rows} {rows === 1 ? 'Reihe' : 'Reihen'}{sp?.rowSpacingCm ? ` à ${sp.rowSpacingCm} cm` : ''} · {free} cm frei ab
+			{offsetCm} cm</span
+		>
+		<button class="btn" type="button" onclick={fillRest} disabled={free <= 0 || free === widthCm}>Restliche Breite füllen</button>
 	</div>
 	<div class="two">
 		<label>Im Beet ab <input name="startDate" type="date" bind:value={startDate} /></label>
@@ -252,6 +288,24 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 10px;
+	}
+	.three {
+		display: grid;
+		grid-template-columns: 1fr 0.7fr 1fr;
+		gap: 10px;
+	}
+	.fill {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		flex-wrap: wrap;
+		margin-top: -4px;
+	}
+	.fill .btn {
+		min-height: 36px;
+		padding: 4px 12px;
+		font-size: 13px;
 	}
 	p {
 		margin: -4px 0 0;

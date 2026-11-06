@@ -76,6 +76,7 @@ const plantingColumns = {
 	speciesSlug: t.species.slug,
 	speciesDe: t.species.nameDe,
 	inRowSpacingCm: t.species.inRowSpacingCm,
+	rowSpacingCm: t.species.rowSpacingCm,
 	familyDe: t.families.nameDe,
 	feedingType: t.species.feedingType,
 	routeDe: t.cultureRoutes.nameDe,
@@ -193,7 +194,10 @@ export async function savePlanting(
 	}
 
 	const others = (await plantingsOfBed(bed.id)).map((p) => ({ ...p, label: `${p.speciesDe} (${p.offsetCm}–${p.offsetCm + p.widthCm} cm)` }));
-	const issues = checkRow(bed, { ...input, id: id ?? undefined, startDate, endDate }, others, sp.inRowSpacingCm);
+	const issues = checkRow(bed, { ...input, id: id ?? undefined, startDate, endDate }, others, {
+		inRowSpacingCm: sp.inRowSpacingCm,
+		rowSpacingCm: sp.rowSpacingCm
+	});
 	if (issues.length) return { ok: false, issues };
 
 	const values = { ...input, startDate, endDate, count: input.quantityMode === 'COUNT' ? input.count : null };
