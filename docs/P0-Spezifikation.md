@@ -181,10 +181,17 @@ For a new planting P in bed B, take every planting H with the same position acro
 - `H.family == P.family` → **STRICT: blocked · WARN: warning + task "Erde tauschen / Kompost" · OFF: no check**
 - Score for feeding order (heavy → medium → light → green manure → heavy): previous main crop is the expected predecessor = +2, same feeding type again = −1.
 - Perennials (Erdbeere, Himbeere) stay in place for every year they span → they block the space and are not rotated.
+- *(P4)* Checked in both directions (what grew here before and what is planned later); "frei ab" = end of the earlier crop + pause.
+- *(P4)* Exception: the **same species again in the same season** (succession, re-sowing) is not a conflict. Another species of the family still is (Gelbsenf after Radieschen).
+- *(P4)* Rows in a HISTORY season are never blocked, only warned (history is what really happened).
+- *(P4)* Feeding order uses the last main crop on the space within ~1.5 years; green manure is skipped as predecessor. Expected: Stark ← Schwach/Gründüngung, Mittel ← Stark, Schwach ← Mittel.
+- *(P4)* WARN/STRICT: a planting that follows the same family gets the task "Erde tauschen / Kompost einarbeiten" in the 2 weeks before planting.
+- Code: `src/lib/rules/rotation.ts`; shown live in the row form (red = blocked, orange = warning, green = good).
 
 ### 4.3 Neighbours
 Rows **directly next to each other** in the same bed (gap between row edges ≤ 10 cm) that overlap in time:
 `GOOD` +1 · `BAD` −3 + warning. Shown live while dragging.
+*(P4)* Same species next to each other is ignored; several sets of one crop count once. Bad neighbours warn but never block.
 
 ### 4.4 Task generation
 - Each `CultureStep` of a planting's route → task with a window `[anchor+offsetStart, anchor+offsetEnd]`.
@@ -199,9 +206,11 @@ When a planting is set to DONE (or the planner finds a free space) and the gap u
 - Suggest a green manure that fits the season (Phacelia A. Apr–E. Mai / A. Aug–E. Sep, Gelbsenf Aug–A. Okt).
 - **Exclude cross-family conflicts:** no Gelbsenf if a Kreuzblütler (cabbage, Radieschen) is coming next or grew there recently.
 - Green manure is a normal planting → it counts for rotation and the bed history.
+- *(P4)* Shown on the bed page as "Gründüngung möglich" per free space (one button per fitting green manure, Phacelia first). Only outdoor beds and non-history seasons. The green manure ends the day before the next crop. Code: `greenManureSuggestions` in `src/lib/rules/succession.ts`.
 
 ### 4.6 Succession growing
 A series creates n plantings with `firstDate + i × intervalDays`. Moving or deleting one asks: "nur diesen Satz / alle folgenden".
+*(P4)* Each set stays in the first row if it is free again, otherwise it moves to the next free space across the bed; the form shows the sets before saving. Nothing is saved if one set does not fit. "alle folgenden" moves the later sets by the same number of days and takes over crop, route, width and quantity; each set keeps its row. Table `succession_series` (bed, species, interval, count), `plantings.succession_series_id`.
 
 ### 4.7 Shopping list (no stock)
 Generated per season from all PLANNED plantings, grouped by `kind`:

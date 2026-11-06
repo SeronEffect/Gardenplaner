@@ -1,6 +1,16 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { deletePlanting, getBed, getPlanting, plantingsOfBed, savePlanting, speciesOptions } from '#lib/server/garden.ts';
-import { readPlantingForm } from '#lib/server/garden-forms.ts';
+import {
+	deletePlanting,
+	followingCount,
+	getBed,
+	getPlanting,
+	plantingsOfBed,
+	savePlanting,
+	savePlantingAndFollowing,
+	speciesOptions
+} from '#lib/server/garden.ts';
+import { readPlantingForm, readScope } from '#lib/server/garden-forms.ts';
+import { companionList } from '#lib/server/planning.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 async function find(params: { id: string; pid: string }) {
@@ -17,22 +27,31 @@ const back = (url: URL, id: number) => {
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { bed, planting } = await find(params);
-	const [history, species] = await Promise.all([plantingsOfBed(bed.id), speciesOptions()]);
-	return { bed, planting, history, species };
+	const [history, species, companions, following] = await Promise.all([
+		plantingsOfBed(bed.id),
+		speciesOptions(),
+		companionList(),
+		followingCount(planting)
+	]);
+	return { bed, planting, history, species, companions, following };
 };
 
 export const actions: Actions = {
 	speichern: async ({ request, params, url }) => {
 		const { bed, planting } = await find(params);
-		const { values, errors } = readPlantingForm(await request.formData(), bed.id);
+		const fd = await request.formData();
+		const { values, errors } = readPlantingForm(fd, bed.id);
 		if (!values) return fail(400, { errors });
-		const res = await savePlanting(planting.id, values);
+		const res =
+			readScope(fd) === 'following'
+				? await savePlantingAndFollowing(planting.id, values)
+				: await savePlanting(planting.id, values);
 		if (!res.ok) return fail(400, { errors: res.issues.map((i) => i.messageDe) });
 		redirect(303, back(url, bed.id));
 	},
-	loeschen: async ({ params, url }) => {
+	loeschen: async ({ request, params, url }) => {
 		const { bed, planting } = await find(params);
-		await deletePlanting(planting.id);
+		await deletePlanting(planting.id, readScope(await request.formData()) === 'following');
 		redirect(303, back(url, bed.id));
 	}
 };

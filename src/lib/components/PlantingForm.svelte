@@ -11,10 +11,19 @@
 		type RowLike
 	} from '../rules/space.ts';
 	import type { FrostDates } from '../rules/timeline.ts';
+	import { assessRow, companionMap, type Companion, type CropRow, type RotationMode } from '../rules/rotation.ts';
+	import { planSuccession } from '../rules/succession.ts';
+	import { formatIsoDate } from '../i18n/de.ts';
 
 	interface SpeciesOpt {
 		id: number;
+		slug: string;
 		nameDe: string;
+		familyId: number;
+		familyDe: string;
+		rotationPauseYears: number;
+		feedingType: 'HEAVY' | 'MEDIUM' | 'LIGHT' | 'NONE';
+		isGreenManure: boolean;
 		rowSpacingCm: number | null;
 		inRowSpacingCm: number | null;
 		lifespanYears: number | null;
@@ -44,18 +53,29 @@
 		frost,
 		species,
 		others,
+		companions = [],
+		historySeason = false,
+		allowSuccession = false,
+		following = 0,
 		planting = null,
 		errors = [],
 		submitLabel = 'Reihe speichern'
 	}: {
 		action: string;
-		bed: { lengthCm: number; widthCm: number };
+		bed: { lengthCm: number; widthCm: number; rotationMode: RotationMode };
 		seasonId: number;
 		year: number;
 		frost: FrostDates;
 		species: SpeciesOpt[];
 		/** Other rows of this bed (all seasons) */
-		others: (RowLike & { id: number })[];
+		others: (CropRow & { id: number })[];
+		companions?: Companion[];
+		/** History season: rotation conflicts only warn */
+		historySeason?: boolean;
+		/** New rows can be created as a succession series */
+		allowSuccession?: boolean;
+		/** Later sets of the same series (edit page) */
+		following?: number;
 		planting?: Existing | null;
 		errors?: string[];
 		submitLabel?: string;
@@ -131,6 +151,48 @@
 	}
 	const pickSpecies = (id: number) => apply(id);
 	const pickRoute = (id: number) => apply(speciesId, id);
+
+	// Succession growing (spec §4.6)
+	let succession = $state(false);
+	// svelte-ignore state_referenced_locally
+	let sets = $state(3);
+	// svelte-ignore state_referenced_locally
+	let intervalDays = $state(init.speciesId && species.find((x) => x.id === init.speciesId)?.slug === 'radieschen' ? 14 : 21);
+	let scope = $state<'one' | 'following'>('one');
+	const plan = $derived(
+		allowSuccession && succession && startDate && endDate && sets >= 2 && intervalDays >= 7
+			? planSuccession(bed, { offsetCm, widthCm, quantityMode, count, startDate, endDate }, Math.min(sets, 12), intervalDays, otherRows)
+			: []
+	);
+
+	// Rotation, feeding order and neighbours, live while editing (spec §4.2/4.3)
+	const companionsBy = $derived(companionMap(companions));
+	const assessment = $derived(
+		sp && startDate && endDate
+			? assessRow(
+					{
+						id: planting?.id,
+						offsetCm,
+						widthCm,
+						quantityMode,
+						count,
+						startDate,
+						endDate,
+						speciesId: sp.id,
+						speciesDe: sp.nameDe,
+						familyId: sp.familyId,
+						familyDe: sp.familyDe,
+						rotationPauseYears: sp.rotationPauseYears,
+						feedingType: sp.feedingType,
+						isGreenManure: sp.isGreenManure
+					},
+					otherRows,
+					bed.rotationMode,
+					companionsBy
+				).issues.map((i) => (historySeason && i.level === 'block' ? { ...i, level: 'warn' as const } : i))
+			: []
+	);
+	const blocked = $derived(assessment.some((i) => i.level === 'block'));
 
 	const issues = $derived(
 		startDate && endDate
@@ -225,12 +287,62 @@
 	</div>
 	<label>Notiz <input name="notes" maxlength="1000" bind:value={notes} placeholder="z. B. Sorte 'Linda'" /></label>
 
+	{#if allowSuccession}
+		<fieldset>
+			<legend>Satzfolge</legend>
+			<label class="inline"
+				><input type="checkbox" name="succession" bind:checked={succession} /> Mehrere Sätze nacheinander (z. B. Salat alle 3 Wochen)</label
+			>
+			{#if succession}
+				<div class="two">
+					<label>Anzahl Sätze <input name="sets" type="number" min="2" max="12" bind:value={sets} /></label>
+					<label>Abstand (Tage) <input name="intervalDays" type="number" min="7" max="60" bind:value={intervalDays} /></label>
+				</div>
+				{#if plan.length}
+					<ol class="sets">
+						{#each plan as s (s.index)}
+							<li class:bad={s.offsetCm === null}>
+								{formatIsoDate(s.startDate)} – {formatIsoDate(s.endDate)} ·
+								{s.offsetCm === null ? 'kein Platz im Beet' : `${s.offsetCm}–${s.offsetCm + widthCm} cm`}
+							</li>
+						{/each}
+					</ol>
+					<p class="muted">Jeder Satz bleibt in der Reihe, wenn sie wieder frei ist, sonst rückt er in die nächste freie Reihe.</p>
+				{/if}
+			{/if}
+		</fieldset>
+	{/if}
+
+	{#if following > 0}
+		<fieldset>
+			<legend>Satzfolge</legend>
+			<label class="inline"><input type="radio" name="scope" value="one" bind:group={scope} /> nur diesen Satz</label>
+			<label class="inline"
+				><input type="radio" name="scope" value="following" bind:group={scope} /> diesen und alle folgenden ({following}) – um
+				dieselben Tage verschieben</label
+			>
+		</fieldset>
+	{/if}
+
 	{#if issues.length}
 		<ul class="warn" aria-live="polite">
 			{#each issues as i, n (n)}<li>{i.messageDe}</li>{/each}
 		</ul>
 	{/if}
-	<button class="btn primary" type="submit" disabled={issues.length > 0}>{submitLabel}</button>
+	{#if assessment.length}
+		<ul class="checks" aria-live="polite" aria-label="Fruchtfolge und Nachbarn">
+			{#each assessment as i, n (n)}<li class="lv-{i.level}">{i.messageDe}</li>{/each}
+		</ul>
+	{/if}
+	{#if blocked}
+		<p class="muted">Dieses Beet hat eine strenge Fruchtfolge. Anderen Platz wählen oder unter „Beet bearbeiten“ auf „nur Warnung“ stellen.</p>
+	{/if}
+	<button
+		class="btn primary"
+		type="submit"
+		disabled={issues.length > 0 || blocked || plan.some((s) => s.offsetCm === null)}
+		>{succession && plan.length ? `${plan.length} Sätze anlegen` : submitLabel}</button
+	>
 </form>
 
 <style>
@@ -254,7 +366,7 @@
 		font-size: 15px;
 		min-height: 36px;
 	}
-	input:not([type='radio']),
+	input:not([type='radio']):not([type='checkbox']),
 	select {
 		min-width: 0;
 		width: 100%;
@@ -266,7 +378,9 @@
 		background: #fff;
 		min-height: 40px;
 	}
-	input[type='radio'] {
+	input[type='radio'],
+	input[type='checkbox'] {
+		flex: none;
 		width: 20px;
 		height: 20px;
 		accent-color: var(--green);
@@ -318,6 +432,41 @@
 		font-size: 14px;
 		background: var(--bad-bg);
 		border: 1px solid var(--bad-line);
+	}
+	.checks {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		font-size: 14px;
+	}
+	.checks li {
+		border-radius: 8px;
+		padding: 6px 10px;
+		border: 1px solid var(--line-soft);
+	}
+	.checks .lv-block {
+		background: var(--bad-bg);
+		border-color: var(--bad-line);
+	}
+	.checks .lv-warn {
+		background: var(--warn-bg);
+		border-color: var(--warn-line);
+	}
+	.checks .lv-good {
+		background: var(--good-bg);
+		border-color: var(--good-line);
+	}
+	.sets {
+		margin: 6px 0 0;
+		padding-left: 22px;
+		font-size: 14px;
+	}
+	.sets .bad {
+		color: #b42318;
+		font-weight: 600;
 	}
 	button {
 		align-self: flex-start;

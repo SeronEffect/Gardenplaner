@@ -1,4 +1,5 @@
 // Database schema. Phase 1: plant knowledge + settings. Phase 2: beds, seasons, plantings.
+// Phase 3: tasks. Phase 4: succession series.
 // Later phases (tasks, log, sensors …) follow the spec, see docs/P0-Spezifikation.md §3 and §8.
 import {
 	boolean,
@@ -233,7 +234,22 @@ export const plantings = pgTable('plantings', {
 	endDate: date('end_date', { mode: 'string' }).notNull(),
 	sourcing: sourcing('sourcing').notNull().default('SEED'),
 	status: plantingStatus('status').notNull().default('PLANNED'),
+	/** Set when the planting is one set of a succession series (phase 4) */
+	successionSeriesId: integer('succession_series_id').references(() => successionSeries.id, { onDelete: 'set null' }),
 	notesDe: text('notes_de')
+});
+
+// ── Phase 4: succession growing (spec §3 SuccessionSeries, §4.6) ───────────
+export const successionSeries = pgTable('succession_series', {
+	id: serial('id').primaryKey(),
+	bedId: integer('bed_id')
+		.notNull()
+		.references(() => beds.id, { onDelete: 'cascade' }),
+	speciesId: integer('species_id')
+		.notNull()
+		.references(() => species.id),
+	intervalDays: smallint('interval_days').notNull(),
+	count: smallint('count').notNull()
 });
 
 // ── Phase 3: tasks (spec §3, §4.4) ──────────────────────────────────────────
