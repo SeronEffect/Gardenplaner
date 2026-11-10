@@ -2,6 +2,7 @@
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import { appOrigin } from './scripts/origin.ts';
 
 export default defineConfig({
 	plugins: [
@@ -11,7 +12,9 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			adapter: adapter(),
+			// Build-time origin for the CSRF check (adapter-node 6 ignores ORIGIN at runtime)
+			paths: { origin: appOrigin(process.env) }
 		})
 	],
 	test: {

@@ -4,7 +4,9 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm build && pnpm prune --prod
+# Public URL of the app, baked into the build for the CSRF check (rebuild when it changes)
+ARG ORIGIN=http://localhost:3000
+RUN ORIGIN=$ORIGIN pnpm build && pnpm prune --prod
 
 FROM node:22-alpine
 WORKDIR /app

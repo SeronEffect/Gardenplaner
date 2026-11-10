@@ -18,11 +18,14 @@ services:
       retries: 10
 
   app:
-    build: .
+    build:
+      context: .
+      args:
+        # Public URL of the app – baked in at build time (adapter-node 6 ignores ORIGIN at runtime)
+        ORIGIN: ${ORIGIN:-http://localhost:3000}
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://garden:${POSTGRES_PASSWORD}@db:5432/garden
-      ORIGIN: http://localhost:3000
     ports:
       - '127.0.0.1:3000:3000'
     depends_on:
