@@ -1,5 +1,5 @@
 // Database schema. Phase 1: plant knowledge + settings. Phase 2: beds, seasons, plantings.
-// Phase 3: tasks. Phase 4: succession series.
+// Phase 3: tasks. Phase 4: succession series. Phase 5: shopping list, diary.
 // Later phases (tasks, log, sensors …) follow the spec, see docs/P0-Spezifikation.md §3 and §8.
 import {
 	boolean,
@@ -287,4 +287,48 @@ export const tasks = pgTable(
 		notesDe: text('notes_de')
 	},
 	(t) => [index('tasks_due').on(t.dueStart, t.dueEnd)]
+);
+
+// ── Phase 5: shopping list and diary (spec §3, §4.7, §4.9) ──────────────────
+export const shoppingKind = pgEnum('shopping_kind', ['SEED', 'SEEDLING', 'SETS', 'GREEN_MANURE']);
+
+export const shoppingItems = pgTable(
+	'shopping_items',
+	{
+		id: serial('id').primaryKey(),
+		seasonId: integer('season_id')
+			.notNull()
+			.references(() => seasons.id, { onDelete: 'cascade' }),
+		/** Null for manual entries */
+		speciesId: integer('species_id').references(() => species.id, { onDelete: 'set null' }),
+		kind: shoppingKind('kind'),
+		labelDe: text('label_de').notNull(),
+		quantity: real('quantity'),
+		unit: text('unit'),
+		detailDe: text('detail_de'),
+		bought: boolean('bought').notNull().default(false),
+		/** `<speciesId>:<kind>` for generated lines (see rules/shopping.ts); null = added by hand */
+		generatedKey: text('generated_key')
+	},
+	(t) => [uniqueIndex('shopping_items_season_key').on(t.seasonId, t.generatedKey)]
+);
+
+export const logType = pgEnum('log_type', ['HARVEST', 'NOTE']);
+
+export const logEntries = pgTable(
+	'log_entries',
+	{
+		id: serial('id').primaryKey(),
+		date: date('date', { mode: 'string' }).notNull(),
+		type: logType('type').notNull(),
+		bedId: integer('bed_id').references(() => beds.id, { onDelete: 'set null' }),
+		plantingId: integer('planting_id').references(() => plantings.id, { onDelete: 'set null' }),
+		/** Copied from the planting so harvests still count when the row is deleted */
+		speciesId: integer('species_id').references(() => species.id, { onDelete: 'set null' }),
+		amount: real('amount'),
+		/** kg | Stück | Bund */
+		unit: text('unit'),
+		textDe: text('text_de')
+	},
+	(t) => [index('log_entries_date').on(t.date)]
 );

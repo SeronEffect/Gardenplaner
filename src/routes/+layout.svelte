@@ -7,7 +7,7 @@
 	let { children }: LayoutProps = $props();
 
 	// Only the phases that are built so far are reachable
-	const BUILT_PHASE = 3;
+	const BUILT_PHASE = 5;
 	const active = (href: string) =>
 		href === '/' ? page.url.pathname === '/' : page.url.pathname === href || page.url.pathname.startsWith(href + '/');
 </script>

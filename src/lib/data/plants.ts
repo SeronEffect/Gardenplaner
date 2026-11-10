@@ -51,6 +51,11 @@ export interface SpeciesData {
 	outdoor?: boolean;
 	greenhouse?: boolean;
 	isGreenManure?: boolean;
+	/** Rough height range of the crop (varieties differ a lot), used for "tall plants on the north side" */
+	heightMinCm?: number;
+	heightMaxCm?: number;
+	/** Weight of one seed potato / set, for the shopping list (kg = plants × setWeightG) */
+	setWeightG?: number;
 	germTempMinC?: number;
 	germTempMaxC?: number;
 	minSoilTempSowC?: number;
@@ -149,8 +154,10 @@ export const SPECIES: SpeciesData[] = [
 		greenhouse: true,
 		germTempMinC: 20,
 		germTempMaxC: 22,
+		heightMinCm: 150,
+		heightMaxCm: 200,
 		wikiTitle: 'Tomate',
-		sourceRef: 'BZfE, Plantura, Oekotest, VZ, BMLUK',
+		sourceRef: 'BZfE, Plantura, Oekotest, VZ, BMLUK, Keimzeit',
 		routes: [
 			{
 				slug: 'freiland',
@@ -196,8 +203,10 @@ export const SPECIES: SpeciesData[] = [
 		germTempMinC: 20,
 		germTempMaxC: 24,
 		minSoilTempSowC: 14,
+		heightMinCm: 100,
+		heightMaxCm: 200,
 		wikiTitle: 'Gurke',
-		sourceRef: 'BZfE, Plantura, toom, Utopia, Oekotest, VZ, BMLUK',
+		sourceRef: 'BZfE, Plantura, toom, Utopia, Oekotest, VZ, BMLUK, Gartenjournal',
 		routes: [
 			{
 				slug: 'vorkultur',
@@ -241,8 +250,10 @@ export const SPECIES: SpeciesData[] = [
 		storageDe:
 			'Im Gemüsefach des Kühlschranks lagern und rasch verbrauchen. Nicht neben Tomaten lagern (ethylenempfindlich).',
 		outdoor: true,
+		heightMinCm: 20,
+		heightMaxCm: 30,
 		wikiTitle: 'Gartensalat',
-		sourceRef: 'BZfE, Oekotest',
+		sourceRef: 'BZfE, Oekotest, Praxis',
 		routes: [
 			{
 				slug: 'direktsaat',
@@ -276,8 +287,10 @@ export const SPECIES: SpeciesData[] = [
 		careDe: 'Aussaat im Februar nur unter Abdeckung. Alle 2–3 Wochen nachsäen.',
 		storageDe: 'Grün abschneiden und im Kühlschrank lagern.',
 		outdoor: true,
+		heightMinCm: 10,
+		heightMaxCm: 20,
 		wikiTitle: 'Radieschen',
-		sourceRef: 'BZfE, VZ',
+		sourceRef: 'BZfE, VZ, Praxis',
 		routes: [
 			{
 				slug: 'direktsaat',
@@ -306,6 +319,8 @@ export const SPECIES: SpeciesData[] = [
 		storageDe: 'Nach der Ernte einige Tage abtrocknen lassen, dann kühl, trocken und dunkel lagern.',
 		defaultSourcing: 'SETS',
 		outdoor: true,
+		heightMinCm: 30,
+		heightMaxCm: 60,
 		wikiTitle: 'Zwiebel',
 		sourceRef: 'BZfE, TFA, Praxis',
 		routes: [
@@ -341,8 +356,10 @@ export const SPECIES: SpeciesData[] = [
 		storageDe:
 			'Grün abschneiden und kühl lagern. Nicht neben Tomaten oder Äpfeln lagern – sonst werden sie bitter.',
 		outdoor: true,
+		heightMinCm: 30,
+		heightMaxCm: 50,
 		wikiTitle: 'Möhre',
-		sourceRef: 'BZfE, VZ, BMLUK',
+		sourceRef: 'BZfE, VZ, BMLUK, Praxis',
 		routes: [
 			{
 				slug: 'frueh',
@@ -381,8 +398,11 @@ export const SPECIES: SpeciesData[] = [
 		defaultSourcing: 'SETS',
 		outdoor: true,
 		minSoilTempSowC: 7,
+		heightMinCm: 50,
+		heightMaxCm: 80,
+		setWeightG: 70,
 		wikiTitle: 'Kartoffel',
-		sourceRef: 'BZfE, Oekotest, toom, BfR, VZ',
+		sourceRef: 'BZfE, Oekotest, toom, BfR, VZ, LWG, Praxis',
 		routes: [
 			{
 				slug: 'frueh',
@@ -421,6 +441,8 @@ export const SPECIES: SpeciesData[] = [
 		storageDe: 'Kaum lagerfähig: ungewaschen kühl lagern und schnell verbrauchen oder einfrieren.',
 		defaultSourcing: 'SEEDLING',
 		outdoor: true,
+		heightMinCm: 15,
+		heightMaxCm: 30,
 		wikiTitle: 'Gartenerdbeere',
 		sourceRef: 'BZfE, Praxis',
 		routes: [
@@ -451,8 +473,10 @@ export const SPECIES: SpeciesData[] = [
 		storageDe: 'Kaum lagerfähig: sofort verbrauchen oder einfrieren.',
 		defaultSourcing: 'SEEDLING',
 		outdoor: true,
+		heightMinCm: 150,
+		heightMaxCm: 200,
 		wikiTitle: 'Himbeere',
-		sourceRef: 'BZfE, Praxis',
+		sourceRef: 'BZfE, Praxis, NaturaDB',
 		routes: [
 			{
 				slug: 'herbst',
@@ -489,8 +513,10 @@ export const SPECIES: SpeciesData[] = [
 		greenhouse: true,
 		germTempMinC: 25,
 		germTempMaxC: 28,
+		heightMinCm: 50,
+		heightMaxCm: 100,
 		wikiTitle: 'Paprika',
-		sourceRef: 'BZfE, Utopia, VZ',
+		sourceRef: 'BZfE, Utopia, VZ, Praxis',
 		routes: [
 			{
 				slug: 'gewaechshaus',
@@ -533,6 +559,8 @@ export const SPECIES: SpeciesData[] = [
 		greenhouse: true,
 		germTempMinC: 25,
 		germTempMaxC: 28,
+		heightMinCm: 50,
+		heightMaxCm: 100,
 		wikiTitle: 'Chili',
 		sourceRef: 'Plantura, Utopia, Praxis',
 		routes: [
@@ -570,8 +598,10 @@ export const SPECIES: SpeciesData[] = [
 			'Gründüngung und Bienenweide, mit keiner Gemüsefamilie verwandt – passt in jede Fruchtfolge. Etwa 5 g/m². Friert im Winter ab, Reste liegen lassen.',
 		isGreenManure: true,
 		outdoor: true,
+		heightMinCm: 60,
+		heightMaxCm: 80,
 		wikiTitle: 'Rainfarn-Phazelie',
-		sourceRef: 'BayWa',
+		sourceRef: 'BayWa, Praxis',
 		routes: [
 			{
 				slug: 'spaetsommer',
@@ -603,8 +633,10 @@ export const SPECIES: SpeciesData[] = [
 			'Schnelle Gründüngung (4–5 Wochen). Kreuzblütler: nicht säen, wenn in den letzten 3 Jahren Radieschen oder Kohl im Beet standen (Kohlhernie). Friert im Winter ab.',
 		isGreenManure: true,
 		outdoor: true,
+		heightMinCm: 60,
+		heightMaxCm: 120,
 		wikiTitle: 'Weißer Senf',
-		sourceRef: 'selbst',
+		sourceRef: 'selbst, Praxis',
 		routes: [
 			{
 				slug: 'herbst',

@@ -14,6 +14,7 @@
 		status: 'OPEN' | 'DONE' | 'SKIPPED';
 		speciesSlug: string | null;
 		notesDe: string | null;
+		plantingId?: number | null;
 	}
 
 	let { task, showDates = true }: { task: Task; showDates?: boolean } = $props();
@@ -43,6 +44,7 @@
 			{#if showDates}· {formatShort(task.dueStart)}{task.dueEnd !== task.dueStart ? `–${formatShort(task.dueEnd)}` : ''}{/if}
 			{#if task.status === 'SKIPPED'}· übersprungen{/if}
 			{#if task.notesDe}· {task.notesDe}{/if}
+			{#if task.type === 'HARVEST' && task.plantingId}· <a href="/tagebuch?reihe={task.plantingId}&jahr={task.dueStart.slice(0, 4)}">Ernte eintragen</a>{/if}
 		</span>
 	</div>
 	{#if !done}
