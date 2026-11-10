@@ -58,13 +58,13 @@ export const LOCATION: Record<string, string> = {
 
 export const NAV = [
 	{ href: '/', label: 'Übersicht', phase: 3 },
+	{ href: '/garten', label: 'Gartenmodus', phase: 6 },
 	{ href: '/saison', label: 'Saison', phase: 6 },
 	{ href: '/gartenplan', label: 'Gartenplan', phase: 2 },
 	{ href: '/saisonplanung', label: 'Saisonplanung', phase: 5 },
 	{ href: '/kalender', label: 'Kalender', phase: 3 },
 	{ href: '/pflanzen', label: 'Pflanzen', phase: 1 },
 	{ href: '/tagebuch', label: 'Tagebuch', phase: 5 },
-	{ href: '/garten', label: 'Gartenmodus', phase: 6 },
 	{ href: '/sensoren', label: 'Sensoren', phase: 7 }
 ] as const;
 

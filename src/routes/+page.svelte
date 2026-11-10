@@ -1,7 +1,8 @@
 <script lang="ts">
 	import ManualTaskForm from '#lib/components/ManualTaskForm.svelte';
+	import SeasonTimeline from '#lib/components/SeasonTimeline.svelte';
 	import TaskItem from '#lib/components/TaskItem.svelte';
-	import { SEASON_STATUS, formatIsoDate, formatWeekRange, taskPlace } from '#lib/i18n/de.ts';
+	import { BED_TYPE, SEASON_STATUS, formatIsoDate, formatMetres, formatWeekRange, taskPlace } from '#lib/i18n/de.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -23,15 +24,53 @@
 
 <div class="head">
 	<div>
-		<p class="muted">{formatIsoDate(data.today)}{data.season ? ` · Saison ${data.season.year} (${SEASON_STATUS[data.season.status]})` : ''}</p>
-		<h1>KW {data.week.week} · {formatWeekRange(data.monday, data.sunday)}</h1>
+		<p class="muted mono">{formatIsoDate(data.today)}{data.season ? ` · Saison ${data.season.year} (${SEASON_STATUS[data.season.status]})` : ''}</p>
+		<h1>Übersicht <span class="mono">· KW {data.week.week}</span> <span class="range">{formatWeekRange(data.monday, data.sunday)}</span></h1>
 	</div>
 	<a class="btn" href="/kalender">Kalender</a>
 </div>
 
+{#if data.overdue.length}
+	<a class="alert" href="#h-over">
+		<i class="status-dot warn" aria-hidden="true"></i>
+		<b>{data.overdue.length} {data.overdue.length === 1 ? 'Aufgabe' : 'Aufgaben'} überfällig</b>
+		<span>{[...new Set(data.overdue.map((t) => t.titleDe))].slice(0, 3).join(' · ')}</span>
+		<span class="go">Ansehen ↓</span>
+	</a>
+{/if}
+
+<section class="beds" aria-label="Beete">
+	{#each data.bedCards as b (b.id)}
+		<a class="card bedcard" href="/gartenplan/beet/{b.id}">
+			<div class="bh">
+				<i class="status-dot {b.state}" aria-hidden="true"></i>
+				<h2>{b.name}</h2>
+				<span class="badge">{BED_TYPE[b.type] ?? b.type}</span>
+			</div>
+			<p class="crops">{b.crops.length ? b.crops.join(' · ') : 'frei'}</p>
+			<dl>
+				<dt>Größe</dt><dd class="mono">{formatMetres(b.sizeCm[0])} × {formatMetres(b.sizeCm[1])}</dd>
+				<dt>Diese Woche</dt><dd class="mono">{b.open} offen{b.late ? ` · ${b.late} überfällig` : ''}</dd>
+				<dt>Sensor</dt><dd class="mono idle">ab P7</dd>
+			</dl>
+		</a>
+	{/each}
+</section>
+
+{#if data.season && data.timeline.length}
+	<section class="card strip" aria-labelledby="h-strip">
+		<div class="sh">
+			<h2 id="h-strip">Saison {data.season.year} auf einen Blick</h2>
+			<span class="muted mono">{data.plantingCount} Reihen · {data.bedsUsed} / {data.beds.length} Beete</span>
+			<a href="/saison?jahr={data.season.year}">Zeitachse öffnen →</a>
+		</div>
+		<SeasonTimeline beds={data.timeline} year={data.season.year} lastFrost={data.frost.lastFrost} firstFrost={data.frost.firstFrost} today={data.today} compact />
+	</section>
+{/if}
+
 <div class="cols">
 	<section class="card main" aria-labelledby="h-week">
-		<h2 id="h-week">Diese Woche · {openCount} offen</h2>
+		<h2 id="h-week">Aufgaben KW {data.week.week} <span class="muted mono">· {openCount} offen</span></h2>
 		{#each groups as [place, tasks] (place)}
 			<h3>{place}</h3>
 			<ul>
@@ -72,14 +111,6 @@
 			{/if}
 		</section>
 
-		{#if data.season}
-			<section class="card" aria-labelledby="h-season">
-				<h2 id="h-season">Saison {data.season.year}</h2>
-				<p>{data.plantingCount} Reihen in {data.bedsUsed} von {data.beds.length} Beeten</p>
-				<a href="/gartenplan?jahr={data.season.year}">Zum Gartenplan</a>
-			</section>
-		{/if}
-
 		<details class="card" open={form?.form === 'neu'}>
 			<summary>+ Eigene Aufgabe</summary>
 			<ManualTaskForm beds={data.beds} defaultDate={data.today} errors={form?.form === 'neu' ? form.errors : []} />
@@ -100,7 +131,103 @@
 		margin: 0 0 4px;
 	}
 	h1 {
-		font-size: 28px;
+		font-size: 20px;
+	}
+	h1 .mono {
+		color: var(--muted);
+		font-weight: 400;
+	}
+	.range {
+		font-size: 14px;
+		font-weight: 400;
+		color: var(--muted);
+	}
+	.alert {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px;
+		padding: 12px 16px;
+		margin-bottom: 14px;
+		border-radius: 8px;
+		background: var(--warn-bg);
+		border: 1px solid var(--warn-line);
+		color: var(--warn-ink);
+		text-decoration: none;
+		font-size: 14px;
+	}
+	.alert b {
+		font-weight: 600;
+	}
+	.alert .go {
+		margin-left: auto;
+		font-weight: 600;
+	}
+	.beds {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+		gap: 14px;
+		margin-bottom: 14px;
+	}
+	.bedcard {
+		padding: 14px 16px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		text-decoration: none;
+		color: var(--ink);
+	}
+	.bedcard:hover {
+		border-color: var(--field-line);
+		color: var(--ink);
+	}
+	.bh {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.bh h2 {
+		margin: 0;
+		font-size: 15px;
+		flex: 1;
+	}
+	.crops {
+		font-size: 13px;
+		color: var(--muted);
+		min-height: 1.4em;
+	}
+	dl {
+		margin: 0;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 4px 12px;
+		font-size: 12px;
+	}
+	dt {
+		color: var(--muted);
+	}
+	dd {
+		margin: 0;
+		text-align: right;
+	}
+	dd.idle {
+		color: var(--idle);
+	}
+	.strip {
+		padding: 14px 16px;
+		margin-bottom: 14px;
+	}
+	.sh {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 6px 12px;
+		margin-bottom: 8px;
+	}
+	.sh a {
+		margin-left: auto;
+		font-size: 13px;
+		font-weight: 500;
 	}
 	.cols {
 		display: grid;
@@ -113,10 +240,7 @@
 		flex-direction: column;
 		gap: 16px;
 	}
-	.card {
-		background: var(--card);
-		border: 1px solid var(--line);
-		border-radius: var(--radius);
+	.cols .card {
 		padding: 14px 16px;
 	}
 	.card.warn {
@@ -124,7 +248,7 @@
 		border-color: var(--warn-line);
 	}
 	h2 {
-		font-size: 17px;
+		font-size: 15px;
 		margin-bottom: 6px;
 	}
 	h3 {
@@ -161,7 +285,7 @@
 			grid-template-columns: 1fr;
 		}
 		h1 {
-			font-size: 22px;
+			font-size: 18px;
 		}
 	}
 </style>
