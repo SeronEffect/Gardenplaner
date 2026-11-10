@@ -169,7 +169,7 @@
 	}
 	.pic {
 		margin: 0;
-		background: #e4e7dd;
+		background: var(--line-soft);
 	}
 	.pic img {
 		display: block;
@@ -181,7 +181,7 @@
 		font-size: 11px;
 		color: var(--muted);
 		padding: 6px 14px;
-		background: #f4f5f0;
+		background: var(--line-soft);
 	}
 	.noimg {
 		height: 180px;
@@ -225,7 +225,7 @@
 		margin: 16px 0 0;
 	}
 	.facts div {
-		background: #f4f5f0;
+		background: var(--line-soft);
 		border-radius: 8px;
 		padding: 8px 10px;
 	}

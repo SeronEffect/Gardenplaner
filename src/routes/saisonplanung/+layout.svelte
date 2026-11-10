@@ -63,7 +63,7 @@
 		padding: 6px 10px;
 		border-radius: 8px;
 		border: 1px solid var(--line);
-		background: #fff;
+		background: var(--field);
 	}
 	.tabs {
 		display: flex;

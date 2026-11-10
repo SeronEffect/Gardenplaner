@@ -68,10 +68,10 @@
 		height: 16px;
 	}
 	.c {
-		background: #f0f1ec;
+		background: var(--line-soft);
 	}
 	.c.month-start {
-		border-left: 1px solid #fff;
+		border-left: 1px solid var(--card);
 	}
 	.c.on {
 		background: var(--col);

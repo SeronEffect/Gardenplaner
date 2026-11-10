@@ -21,7 +21,7 @@
 		display: grid;
 		place-items: center;
 		padding: 16px;
-		background: var(--green-dark);
+		background: var(--bg);
 	}
 	.card {
 		background: var(--card);

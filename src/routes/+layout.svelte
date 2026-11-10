@@ -40,21 +40,23 @@
 	{@render children()}
 {:else}
 <div class="app">
-	<nav class="side" aria-label="Hauptnavigation">
-		<a class="brand" href="/">Gardenplaner</a>
-		{#each NAV as item (item.href)}
-			{#if item.phase <= BUILT_PHASE}
-				<a href={item.href} class:on={active(item.href)} aria-current={active(item.href) ? 'page' : undefined}
-					>{item.label}</a
-				>
-			{:else}
-				<span class="soon" title="Kommt in Phase {item.phase}">{item.label}<small>bald</small></span>
-			{/if}
-		{/each}
+	<header class="top">
+		<a class="brand" href="/">gardenplaner<span aria-hidden="true">_</span></a>
+		<nav aria-label="Hauptnavigation">
+			{#each NAV as item (item.href)}
+				{#if item.phase <= BUILT_PHASE}
+					<a href={item.href} class:on={active(item.href)} aria-current={active(item.href) ? 'page' : undefined}
+						>{item.label}</a
+					>
+				{:else}
+					<span class="soon" title="Kommt in Phase {item.phase}">{item.label}<small>P{item.phase}</small></span>
+				{/if}
+			{/each}
+		</nav>
 		{#if data.loggedIn}
 			<form method="POST" action="/abmelden" class="logout" onsubmit={() => navigator.serviceWorker?.controller?.postMessage('logout')}><button type="submit">Abmelden</button></form>
 		{/if}
-	</nav>
+	</header>
 	<main class="main">
 		{#if !online}
 			<p class="note offline" role="status">Offline – du siehst den zuletzt geladenen Stand. Änderungen werden nicht gespeichert.</p>
@@ -72,115 +74,137 @@
 
 <style>
 	.app {
-		display: grid;
-		grid-template-columns: 220px 1fr;
 		min-height: 100vh;
-	}
-	.side {
-		background: var(--green-dark);
-		padding: 24px 16px;
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+	}
+	.top {
 		position: sticky;
 		top: 0;
-		height: 100vh;
+		z-index: 10;
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		padding: 8px 24px;
+		background: rgb(15 20 17 / 0.92);
+		backdrop-filter: blur(8px);
+		border-bottom: 1px solid var(--line);
 	}
 	.brand {
-		color: #fff;
-		font-weight: 700;
-		font-size: 18px;
-		padding: 8px 12px 18px;
+		font-family: var(--mono);
+		color: var(--green);
 		text-decoration: none;
-	}
-	.side a:not(.brand),
-	.soon {
-		color: #e8efe6;
-		text-decoration: none;
-		padding: 10px 12px;
-		border-radius: 8px;
 		font-size: 15px;
+		padding: 8px 0;
+		white-space: nowrap;
+	}
+	.brand span {
+		animation: blink 1.2s steps(1) infinite;
+	}
+	@keyframes blink {
+		50% {
+			opacity: 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.brand span {
+			animation: none;
+		}
+	}
+	nav {
 		display: flex;
-		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 2px;
+		flex: 1;
+		min-width: 0;
+	}
+	nav a,
+	.soon {
+		color: var(--muted);
+		text-decoration: none;
+		padding: 8px 12px;
+		border-radius: 6px;
+		font-size: 14px;
+		display: inline-flex;
 		align-items: center;
+		gap: 6px;
+		min-height: 36px;
+		white-space: nowrap;
 	}
-	.side a:not(.brand):hover {
-		background: #2a4a33;
-		color: #fff;
+	nav a:hover {
+		color: var(--ink);
+		background: var(--card);
 	}
-	.side a.on {
-		background: var(--green);
-		color: #fff;
-		font-weight: 600;
+	nav a.on {
+		background: var(--card-2);
+		color: var(--ink);
+		font-weight: 500;
 	}
 	.soon {
-		color: #a9bba6;
+		color: var(--idle);
 		cursor: default;
 	}
 	.soon small {
-		font-size: 11px;
-		border: 1px solid #5c7a63;
-		border-radius: 999px;
-		padding: 0 6px;
+		font-family: var(--mono);
+		font-size: 10px;
+		border: 1px solid var(--line);
+		border-radius: 4px;
+		padding: 0 4px;
 	}
 	.main {
-		padding: 28px 32px;
+		flex: 1;
+		width: 100%;
+		max-width: 1440px;
+		margin: 0 auto;
+		padding: 24px;
 		min-width: 0;
 	}
 	.note {
 		margin: 0 0 16px;
-		padding: 8px 12px;
+		padding: 10px 14px;
 		border-radius: 8px;
 		background: var(--warn-bg);
 		border: 1px solid var(--warn-line);
+		color: var(--warn-ink);
 		font-size: 13px;
 	}
-	.note.offline {
-		background: #eef2f8;
-		border-color: #9fb3d1;
+	.note code {
+		font-family: var(--mono);
 	}
-	.logout {
-		margin-top: auto;
+	.note.offline {
+		background: #142030;
+		border-color: #2f4a6b;
+		color: var(--info-ink);
 	}
 	.logout button {
 		background: none;
 		border: 0;
-		color: #c9d6c6;
-		padding: 10px 12px;
+		color: var(--muted);
+		padding: 8px 10px;
 		cursor: pointer;
-		text-align: left;
-		width: 100%;
-		min-height: 40px;
+		min-height: 36px;
+		white-space: nowrap;
 	}
 	.logout button:hover {
-		color: #fff;
+		color: var(--ink);
 	}
 
 	@media (max-width: 800px) {
-		.app {
-			grid-template-columns: 1fr;
-			grid-template-rows: auto 1fr;
+		.top {
+			padding: 4px 8px;
+			gap: 8px;
 		}
-		.side {
-			height: auto;
-			flex-direction: row;
+		nav {
+			flex-wrap: nowrap;
 			overflow-x: auto;
-			padding: 8px;
-			z-index: 10;
-		}
-		.brand {
-			padding: 10px 8px;
-			font-size: 16px;
+			scrollbar-width: none;
 		}
 		/* Phone: only show what is usable */
 		.soon {
 			display: none;
 		}
 		.main {
-			padding: 16px;
-		}
-		.logout {
-			margin-top: 0;
+			padding: 16px 12px;
 		}
 	}
 </style>

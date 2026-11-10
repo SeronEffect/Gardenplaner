@@ -83,11 +83,11 @@
 >
 	<defs>
 		<pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
-			<path d="M 100 0 L 0 0 0 100" fill="none" stroke="#dfe3d6" stroke-width="2" />
+			<path d="M 100 0 L 0 0 0 100" fill="none" style="stroke: var(--line-soft)" stroke-width="2" />
 		</pattern>
 	</defs>
 	<rect x={bounds.x} y={bounds.y} width={bounds.w} height={bounds.h} fill="url(#grid)" />
-	<text x={bounds.x + 10} y={bounds.y + font * 1.2} font-size={font * 0.8} fill="#5b6358">1 Kästchen = 1 m</text>
+	<text x={bounds.x + 10} y={bounds.y + font * 1.2} font-size={font * 0.8} style="fill: var(--muted)">1 Kästchen = 1 m</text>
 
 	{#each beds as b (b.id)}
 		{@const s = size(b)}
@@ -105,11 +105,11 @@
 			{#each rowsByBed.get(b.id) ?? [] as r (r.id)}
 				{@const rr = rowRect(b, r)}
 				{@const c = plantColor(r.speciesSlug)}
-				<rect x={rr.x} y={rr.y} width={rr.w} height={rr.h} fill={c.bg} stroke="#fff" stroke-width="3">
+				<rect x={rr.x} y={rr.y} width={rr.w} height={rr.h} fill={c.bg} style="stroke: var(--card)" stroke-width="3">
 					<title>{r.speciesDe}: {formatIsoDate(r.startDate)} – {formatIsoDate(r.endDate)}</title>
 				</rect>
 				{#each dividers(rr, r) as l, k (k)}
-					<line {...l} stroke="#ffffff" stroke-opacity="0.7" stroke-width="3" stroke-dasharray="12 8" />
+					<line {...l} style="stroke: var(--ink)" stroke-opacity="0.5" stroke-width="3" stroke-dasharray="12 8" />
 				{/each}
 				{#if (rr.vertical ? rr.w : rr.h) >= font * 1.3}
 					{#if rr.vertical}
@@ -143,18 +143,18 @@
 		width: 100%;
 		height: auto;
 		display: block;
-		background: #eef0e8;
+		background: #121915;
 		border-radius: 8px;
 		font-family: var(--font);
 	}
 	.bed {
-		fill: #fff;
-		stroke: #8a8f84;
+		fill: var(--card);
+		stroke: var(--idle);
 		stroke-width: 4;
 	}
 	.bed.gh {
-		fill: #f3eefa;
-		stroke: #6b46c1;
+		fill: #221e2e;
+		stroke: var(--c-greenhouse);
 	}
 	.bed.sel {
 		stroke: var(--green);
@@ -164,7 +164,7 @@
 		stroke: var(--green);
 	}
 	a:focus-visible .bed {
-		stroke: #7fb08a;
+		stroke: var(--green-dark);
 		stroke-width: 12;
 	}
 	.label {

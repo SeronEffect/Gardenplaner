@@ -213,7 +213,7 @@
 		border-left: 1px solid var(--line-soft);
 	}
 	.slot.today {
-		background: #f3faf3;
+		background: var(--good-bg);
 	}
 	.bar {
 		grid-row: 1;

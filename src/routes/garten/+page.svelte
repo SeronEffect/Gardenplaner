@@ -108,7 +108,7 @@
 	}
 	.card.warn {
 		border-color: var(--warn-line);
-		background: #fffaf0;
+		background: var(--warn-bg);
 	}
 	h2 {
 		font-size: 16px;
@@ -162,7 +162,7 @@
 		border-radius: 8px;
 		padding: 6px 10px;
 		font: inherit;
-		background: #fff;
+		background: var(--field);
 	}
 	.note {
 		display: grid;

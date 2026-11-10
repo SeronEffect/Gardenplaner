@@ -59,11 +59,13 @@ export const LOCATION: Record<string, string> = {
 export const NAV = [
 	{ href: '/', label: 'Übersicht', phase: 3 },
 	{ href: '/garten', label: 'Gartenmodus', phase: 6 },
+	{ href: '/saison', label: 'Saison', phase: 6 },
 	{ href: '/gartenplan', label: 'Gartenplan', phase: 2 },
 	{ href: '/saisonplanung', label: 'Saisonplanung', phase: 5 },
 	{ href: '/kalender', label: 'Kalender', phase: 3 },
 	{ href: '/pflanzen', label: 'Pflanzen', phase: 1 },
-	{ href: '/tagebuch', label: 'Tagebuch', phase: 5 }
+	{ href: '/tagebuch', label: 'Tagebuch', phase: 5 },
+	{ href: '/sensoren', label: 'Sensoren', phase: 7 }
 ] as const;
 
 /** 15.03. */
@@ -127,13 +129,13 @@ export function formatMetres(cm: number): string {
 export const WEEKDAYS_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
 export const TASK_CATEGORY: Record<string, { label: string; color: string }> = {
-	sow: { label: 'Säen', color: '#2f855a' },
-	plant: { label: 'Pflanzen', color: '#c05621' },
-	care: { label: 'Pflege', color: '#6b7a5e' },
-	fertilize: { label: 'Düngen', color: '#8a6d1f' },
-	harvest: { label: 'Ernte', color: '#c53030' },
-	after: { label: 'Nachsorge', color: '#5a67a8' },
-	own: { label: 'Eigene', color: '#2b6cb0' }
+	sow: { label: 'Säen', color: '#6fc28b' },
+	plant: { label: 'Pflanzen', color: '#e8954f' },
+	care: { label: 'Pflege', color: '#a9b89c' },
+	fertilize: { label: 'Düngen', color: '#d9b65a' },
+	harvest: { label: 'Ernte', color: '#e87c7c' },
+	after: { label: 'Nachsorge', color: '#9aa6e6' },
+	own: { label: 'Eigene', color: '#7fb2f0' }
 };
 
 /** Where a task happens: windowsill or the bed (the greenhouse is a bed) */
