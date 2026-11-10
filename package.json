@@ -8,13 +8,14 @@
 		"build": "node --env-file-if-exists=.env node_modules/vite/bin/vite.js build",
 		"preview": "node --env-file-if-exists=.env node_modules/vite/bin/vite.js preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc -p src/service-worker",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest run",
 		"db:generate": "node --env-file-if-exists=.env node_modules/drizzle-kit/bin.cjs generate",
 		"db:studio": "node --env-file-if-exists=.env node_modules/drizzle-kit/bin.cjs studio",
 		"images:fetch": "tsx --env-file=.env scripts/fetch-images.ts",
-		"start": "node --env-file-if-exists=.env build"
+		"start": "node --env-file-if-exists=.env build",
+		"passwort": "node --env-file-if-exists=.env --experimental-strip-types --no-warnings scripts/set-password.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^6.0.1",

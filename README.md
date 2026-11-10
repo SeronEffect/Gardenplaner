@@ -15,9 +15,9 @@ UI language: German. Code: English. Spec: [docs/P0-Spezifikation.md](docs/P0-Spe
 | P1 | Plant database + plant cards | ✅ |
 | P2 | Beds, rows, seasons, history | ✅ |
 | P3 | Tasks + weekly calendar | ✅ |
-| P4 | Rotation, neighbours, succession, green manure | – |
-| P5 | Suggestions + shopping list | – |
-| P6 | PWA/offline, login, hosting | – |
+| P4 | Rotation, neighbours, succession, green manure | ✅ |
+| P5 | Suggestions, shopping list, diary | ✅ |
+| P6 | Login, PWA/offline, garden mode (done) · online hosting (open) | 🔶 |
 | P7 | Weather + sensors | – |
 
 ## Stack
@@ -38,11 +38,26 @@ pnpm images:fetch             # optional: plant pictures from Wikimedia Commons 
 
 Run everything in Docker instead: `docker compose up -d --build` → http://localhost:3000
 
+### Login
+
+Without a password the app is open (fine on your own machine; a banner reminds you). Before putting it
+online, set one **on the server** – there is deliberately no way to set it through the web page:
+
+```bash
+pnpm passwort                 # asks twice, min. 10 characters; --entfernen removes it again
+# in Docker:
+docker compose exec app node --experimental-strip-types scripts/set-password.ts
+```
+
+Changing the password logs out every device. On the phone, open the app and "Zum Startbildschirm hinzufügen" –
+it starts in the garden mode (`/garten`) and shows the last loaded pages offline.
+
 ## Commands
 
 | Command | What it does |
 |---|---|
 | `pnpm dev` | Dev server (loads `.env`) |
+| `pnpm passwort [--entfernen]` | Set or remove the login password |
 | `pnpm test` | Unit tests (date logic, plant data consistency, picture lookup) |
 | `pnpm check` | Type check |
 | `pnpm build` / `pnpm start` | Production build / run it |

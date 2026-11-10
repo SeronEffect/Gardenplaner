@@ -54,7 +54,9 @@ export const settings = pgTable('settings', {
 	/** MM-DD */
 	lastFrost: text('last_frost').notNull().default('05-15'),
 	/** MM-DD */
-	firstFrost: text('first_frost').notNull().default('10-15')
+	firstFrost: text('first_frost').notNull().default('10-15'),
+	/** scrypt hash (spec §4.10); null = no login. Set with `pnpm passwort`, never via the web page. */
+	passwordHash: text('password_hash')
 });
 
 export const families = pgTable('families', {

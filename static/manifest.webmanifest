@@ -1,0 +1,16 @@
+{
+	"name": "Gardenplaner",
+	"short_name": "Garten",
+	"description": "Gartenjahr planen, Aufgaben abhaken, Ernte eintragen",
+	"lang": "de",
+	"start_url": "/garten",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#f6f6f2",
+	"theme_color": "#1f3a27",
+	"icons": [
+		{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+		{ "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+		{ "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+	]
+}

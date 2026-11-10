@@ -4,10 +4,30 @@
 	import { NAV } from '#lib/i18n/de.ts';
 	import type { LayoutProps } from './$types';
 
-	let { children }: LayoutProps = $props();
+	let { children, data }: LayoutProps = $props();
 
 	// Only the phases that are built so far are reachable
-	const BUILT_PHASE = 5;
+	const BUILT_PHASE = 6;
+	const bare = $derived(page.url.pathname === '/anmelden');
+
+	// First visit: the page was loaded before the service worker took over → let it store this page
+	$effect(() => {
+		if (!('serviceWorker' in navigator) || navigator.serviceWorker.controller) return;
+		navigator.serviceWorker.ready.then((reg) => reg.active?.postMessage({ cache: location.href }));
+	});
+
+	// Offline hint for the installed app (spec §4.11)
+	let online = $state(true);
+	$effect(() => {
+		const update = () => (online = navigator.onLine);
+		update();
+		addEventListener('online', update);
+		addEventListener('offline', update);
+		return () => {
+			removeEventListener('online', update);
+			removeEventListener('offline', update);
+		};
+	});
 	const active = (href: string) =>
 		href === '/' ? page.url.pathname === '/' : page.url.pathname === href || page.url.pathname.startsWith(href + '/');
 </script>
@@ -16,6 +36,9 @@
 	<title>Gardenplaner</title>
 </svelte:head>
 
+{#if bare}
+	{@render children()}
+{:else}
 <div class="app">
 	<nav class="side" aria-label="Hauptnavigation">
 		<a class="brand" href="/">Gardenplaner</a>
@@ -28,11 +51,24 @@
 				<span class="soon" title="Kommt in Phase {item.phase}">{item.label}<small>bald</small></span>
 			{/if}
 		{/each}
+		{#if data.loggedIn}
+			<form method="POST" action="/abmelden" class="logout" onsubmit={() => navigator.serviceWorker?.controller?.postMessage('logout')}><button type="submit">Abmelden</button></form>
+		{/if}
 	</nav>
 	<main class="main">
+		{#if !online}
+			<p class="note offline" role="status">Offline – du siehst den zuletzt geladenen Stand. Änderungen werden nicht gespeichert.</p>
+		{/if}
+		{#if !data.authEnabled}
+			<p class="note">
+				Kein Passwort gesetzt – jeder, der die App erreicht, kann sie benutzen. Vor dem Online-Gang auf dem Server
+				<code>pnpm passwort</code> ausführen.
+			</p>
+		{/if}
 		{@render children()}
 	</main>
 </div>
+{/if}
 
 <style>
 	.app {
@@ -91,6 +127,34 @@
 		padding: 28px 32px;
 		min-width: 0;
 	}
+	.note {
+		margin: 0 0 16px;
+		padding: 8px 12px;
+		border-radius: 8px;
+		background: var(--warn-bg);
+		border: 1px solid var(--warn-line);
+		font-size: 13px;
+	}
+	.note.offline {
+		background: #eef2f8;
+		border-color: #9fb3d1;
+	}
+	.logout {
+		margin-top: auto;
+	}
+	.logout button {
+		background: none;
+		border: 0;
+		color: #c9d6c6;
+		padding: 10px 12px;
+		cursor: pointer;
+		text-align: left;
+		width: 100%;
+		min-height: 40px;
+	}
+	.logout button:hover {
+		color: #fff;
+	}
 
 	@media (max-width: 800px) {
 		.app {
@@ -114,6 +178,9 @@
 		}
 		.main {
 			padding: 16px;
+		}
+		.logout {
+			margin-top: 0;
 		}
 	}
 </style>

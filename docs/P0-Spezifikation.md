@@ -236,6 +236,23 @@ Page `/tagebuch`: add a harvest (amount + kg/Stück/Bund) or a note, optionally 
 
 ---
 
+### 4.10 Login (Phase 6)
+Single user, one password (spec §0). No user table, no session table:
+- **Password:** `settings.passwordHash` = scrypt (`scrypt$N$r$p$salt$hash`, Node `crypto`, no extra package). Set **only on the server** with `pnpm passwort` (asks twice, min. 10 characters) – never through the web page, so nobody can take over a freshly installed online instance.
+- **No password set:** the app stays open (local use) and shows a banner "Kein Passwort gesetzt". Once set, every page except `/anmelden`, the manifest, icons and the service worker needs a session.
+- **Session:** cookie `garden_session` = `<expiresMs>.<HMAC-SHA256(passwordHash, expiresMs)>`, httpOnly, SameSite=Lax, `secure` when the origin is https, 30 days. Changing the password invalidates all sessions. Checked in `hooks.server.ts` (`handle`).
+- **Brute force:** after each failed login the next attempt from that IP waits longer (1 s, 2 s, 4 s … max 30 s, in memory).
+- `/abmelden` deletes the cookie.
+
+### 4.11 PWA and offline (Phase 6)
+- `static/manifest.webmanifest` (name, icons 192/512 + maskable, `start_url` `/garten`, `display: standalone`, theme `#1f3a27`), favicon + apple-touch-icon.
+- `src/service-worker.ts`: pre-caches the built app files; pages (GET navigations and `__data.json`) network-first with a cache fallback, so the last loaded week is readable without signal. Form posts are not queued offline – the page shows "Offline – Änderungen werden nicht gespeichert".
+
+### 4.12 Error page (Phase 6)
+`handleError` recognises a database that is not reachable (`ECONNREFUSED`, `ENOTFOUND`, connection timeout) and shows "Datenbank nicht erreichbar" with the fix (`docker compose up -d db`) instead of a bare 500.
+
+---
+
 ## 5. Starting plant data (sourced, v2)
 
 ### 5.0 Sources
@@ -326,7 +343,7 @@ Nachtschatten 3 · **Kürbisgewächse 4** (Plantura) · **Kreuzblütler 4** (inc
 | # | Screen | Device | Contents |
 |---|---|---|---|
 | 1 | **Übersicht** | Desktop | KW tasks by location, ready to harvest, frost warning, season status |
-| 1m | **Gartenmodus** | Phone | This week's tasks as a checklist, "Ernte eintragen", "Notiz/Foto" |
+| 1m | **Gartenmodus** `/garten` | Phone (P6) | Today's and this week's open tasks as a big checklist (overdue first), done ones folded away; quick "Ernte eintragen" per harvest task and "Notiz" (both go to the diary, no photos); start page of the installed app |
 | 2 | **Gartenplan** | Desktop (phone: view only) | 2D map, season selector + date slider, rows coloured by crop; click a bed → bed detail with history |
 | 3 | **Saisonplanung** | Desktop + phone | Wishlist (left) · suggestions per bed and free space (right) · tab "Einkaufsliste" (drag & drop on the map: later) |
 | 4 | **Kalender** | Desktop + phone | KW view (default) / month, filter by location/bed/task type |
