@@ -40,7 +40,7 @@ Alternatives: `csrf.trustedOrigins` (not honoured for remote functions, treats t
   - 4 new unit tests in `scripts/origin.test.ts` (default, override, trailing slash, invalid values) – failed before (module missing), pass after; 75/75 tests
   - `pnpm check` 0 errors, `pnpm build` OK, `build/adapter-node.js` → `origin = "http://localhost:3000"`
   - Reproduction re-run on a fresh DB with `node build`: POST `/gartenplan/beet/neu` with `Origin: http://localhost:3000` → 200 (redirect), bed saved; `Origin: http://evil.example` → 403 (protection still active)
-- PR: PR_LINK
+- PR: https://github.com/SeronEffect/Gardenplaner/pull/6
 - Open points:
   - Online hosting (P6): build with `ORIGIN=https://<domain>`; behind a reverse proxy additionally consider `PROTOCOL_HEADER`/`HOST_HEADER`.
   - `http://127.0.0.1:3000` is a different origin → use `localhost`.
