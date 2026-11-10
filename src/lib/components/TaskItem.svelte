@@ -17,7 +17,7 @@
 		plantingId?: number | null;
 	}
 
-	let { task, showDates = true }: { task: Task; showDates?: boolean } = $props();
+	let { task, showDates = true, harvestLink = true }: { task: Task; showDates?: boolean; harvestLink?: boolean } = $props();
 
 	// Keep the current query (e.g. ?woche=) so the page stays on the same week after saving
 	const action = $derived(`?/status${page.url.search ? '&' + page.url.search.slice(1) : ''}`);
@@ -44,7 +44,7 @@
 			{#if showDates}· {formatShort(task.dueStart)}{task.dueEnd !== task.dueStart ? `–${formatShort(task.dueEnd)}` : ''}{/if}
 			{#if task.status === 'SKIPPED'}· übersprungen{/if}
 			{#if task.notesDe}· {task.notesDe}{/if}
-			{#if task.type === 'HARVEST' && task.plantingId}· <a href="/tagebuch?reihe={task.plantingId}&jahr={task.dueStart.slice(0, 4)}">Ernte eintragen</a>{/if}
+			{#if harvestLink && task.type === 'HARVEST' && task.plantingId}· <a href="/tagebuch?reihe={task.plantingId}&jahr={task.dueStart.slice(0, 4)}">Ernte eintragen</a>{/if}
 		</span>
 	</div>
 	{#if !done}

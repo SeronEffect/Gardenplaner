@@ -15,6 +15,9 @@ COPY --from=build /app/build ./build
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
 COPY --from=build /app/drizzle ./drizzle
+# Password tool (spec §4.10): docker compose exec app node --experimental-strip-types scripts/set-password.ts
+COPY --from=build /app/scripts/set-password.ts ./scripts/
+COPY --from=build /app/src/lib/server/auth.ts ./src/lib/server/
 EXPOSE 3000
 # Migrations and plant reference data are applied on startup (src/hooks.server.ts)
 CMD ["node", "build"]
