@@ -29,5 +29,5 @@ Alternatives: `process.exit()` in a SIGTERM handler (cuts off running requests, 
   - 2 new unit tests in `src/lib/server/db/shutdown.test.ts` – failed before (module missing), pass after; 73/73 tests
   - `pnpm check` 0 errors, `pnpm build` OK
   - Reproduction re-run: `node build` + GET + SIGTERM → process exits after ~2 s (before: alive after 45 s)
-- PR: PR_LINK
+- PR: https://github.com/SeronEffect/Gardenplaner/pull/7
 - Open points: none. Independent of PR #6 (bug-fix-002), can be merged in any order.
