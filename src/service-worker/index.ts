@@ -28,7 +28,7 @@ sw.addEventListener('activate', (event) => {
 });
 
 const OFFLINE_HTML = `<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Offline – Gardenplaner</title><body style="font:15px/1.5 system-ui,sans-serif;padding:24px;background:#f6f6f2;color:#1f2a1f">
+<title>Offline – Gardenplaner</title><body style="font:15px/1.5 system-ui,sans-serif;padding:24px;background:#0f1411;color:#e6ede7">
 <h1 style="font-size:20px">Offline</h1><p>Diese Seite war noch nicht gespeichert. Öffne sie einmal mit Netz, dann ist sie auch offline lesbar.</p>
 <p><a href="/garten" style="color:#2f6b3a">Zum Gartenmodus</a></p></body></html>`;
 

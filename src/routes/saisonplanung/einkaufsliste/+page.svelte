@@ -142,7 +142,7 @@
 	.link {
 		background: none;
 		border: 0;
-		color: #b4423a;
+		color: var(--bad-ink);
 		cursor: pointer;
 		min-height: 40px;
 		text-decoration: underline;

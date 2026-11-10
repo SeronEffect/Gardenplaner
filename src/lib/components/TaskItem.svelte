@@ -72,8 +72,8 @@
 		height: 30px;
 		border: 2px solid var(--green);
 		border-radius: 8px;
-		background: #fff;
-		color: #fff;
+		background: var(--field);
+		color: var(--on-accent);
 		font-size: 18px;
 		line-height: 1;
 		cursor: pointer;

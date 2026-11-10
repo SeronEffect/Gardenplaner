@@ -165,7 +165,7 @@
 		border: 1px solid var(--line);
 		border-radius: 8px;
 		padding: 6px 10px;
-		background: #fff;
+		background: var(--field);
 		font: inherit;
 	}
 	.layout {
@@ -260,8 +260,8 @@
 		font-size: 13px;
 	}
 	.chip.harvest {
-		background: #fdeeee;
-		border-color: #e3a3a3;
+		background: var(--bad-bg);
+		border-color: var(--bad-line);
 	}
 	.text {
 		margin: 4px 0 0;
@@ -273,7 +273,7 @@
 	.link {
 		background: none;
 		border: 0;
-		color: #b4423a;
+		color: var(--bad-ink);
 		cursor: pointer;
 		min-height: 36px;
 		text-decoration: underline;

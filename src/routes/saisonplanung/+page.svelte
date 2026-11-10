@@ -197,8 +197,8 @@
 		width: 24px;
 		height: 24px;
 		border-radius: 999px;
-		background: var(--green-dark);
-		color: #fff;
+		background: var(--green);
+		color: var(--on-accent);
 		display: inline-grid;
 		place-items: center;
 		font-size: 12px;
@@ -253,7 +253,7 @@
 		border-radius: 8px;
 		border: 1px solid var(--line);
 		padding: 4px 8px;
-		background: #fff;
+		background: var(--field);
 	}
 	.banner {
 		border-radius: 8px;

@@ -91,9 +91,9 @@
 		font-weight: 400;
 		font-size: 15px;
 		padding: 8px 10px;
-		border: 1px solid #c9ccc2;
+		border: 1px solid var(--field-line);
 		border-radius: 8px;
-		background: #fff;
+		background: var(--field);
 		min-height: 40px;
 	}
 	.two {

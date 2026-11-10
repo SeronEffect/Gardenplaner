@@ -88,8 +88,8 @@
 	select {
 		padding: 8px 10px;
 		border-radius: 8px;
-		border: 1px solid #c9ccc2;
-		background: #fff;
+		border: 1px solid var(--field-line);
+		background: var(--field);
 		min-height: 40px;
 	}
 	form {

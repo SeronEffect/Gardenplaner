@@ -97,8 +97,8 @@
 	select {
 		padding: 9px 12px;
 		border-radius: 8px;
-		border: 1px solid #c9ccc2;
-		background: #fff;
+		border: 1px solid var(--field-line);
+		background: var(--field);
 		min-height: 40px;
 	}
 	input {
@@ -137,7 +137,7 @@
 	}
 	.ph {
 		height: 90px;
-		background: #e4e7dd;
+		background: var(--line-soft);
 		display: flex;
 		align-items: center;
 		justify-content: center;

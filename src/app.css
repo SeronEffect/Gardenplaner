@@ -1,30 +1,51 @@
+/* Design „Instrumententafel“ (docs/Redesign.md): dark, data-dense. Fonts are bundled (works offline). */
+@import '@fontsource/ibm-plex-sans/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-500.css';
+@import '@fontsource/ibm-plex-sans/latin-600.css';
+@import '@fontsource/ibm-plex-mono/latin-400.css';
+@import '@fontsource/ibm-plex-mono/latin-500.css';
+
 :root {
-	--ink: #1f2a1f;
-	--muted: #5b6358;
-	--bg: #f6f6f2;
-	--card: #ffffff;
-	--line: #dcddd5;
-	--line-soft: #eeeee8;
-	--green-dark: #1f3a27;
-	--green: #2f6b3a;
-	--good-bg: #eaf5ea;
-	--good-line: #9ccb9c;
-	--good-ink: #1f4d2a;
-	--bad-bg: #fdecec;
-	--bad-line: #e39a9a;
-	--bad-ink: #7a1f1f;
-	--warn-bg: #fff4e0;
-	--warn-line: #e8b45a;
-	/* Year strip – distinguishable by lightness too */
-	--c-windowsill: #2b6cb0;
-	--c-greenhouse: #6b46c1;
-	--c-directSow: #2f855a;
-	--c-plantOut: #c05621;
-	--c-harvest: #c53030;
+	--ink: #e6ede7;
+	--muted: #9aa79e;
+	--bg: #0f1411;
+	--card: #171e19;
+	--card-2: #1b241e;
+	--line: #26302a;
+	--line-soft: #1f2822;
+	/* Inputs */
+	--field: #0c1210;
+	--field-line: #34413a;
+	/* Accent (old names kept: --green = accent, --green-dark = accent hover) */
+	--green: #b5e655;
+	--green-dark: #d6f59a;
+	--on-accent: #0f1411;
+	--good-bg: #1a2a17;
+	--good-line: #4c7a3a;
+	--good-ink: #cfea9e;
+	--bad-bg: #2e1717;
+	--bad-line: #8a3a3a;
+	--bad-ink: #f2a5a5;
+	--warn-bg: #2a1f14;
+	--warn-line: #6b4a22;
+	--warn-ink: #f5c89a;
+	--info-ink: #9ac8f5;
+	--idle: #5e6b62;
+	/* Year strip / season timeline – distinguishable by lightness too */
+	--c-windowsill: #5b9be6;
+	--c-greenhouse: #a88beb;
+	--c-directSow: #6fc28b;
+	--c-plantOut: #e8954f;
+	--c-harvest: #e06c6c;
+	--t-pre: repeating-linear-gradient(45deg, #4a5a4f 0 4px, #2c3830 4px 8px);
+	--t-bed: #3f5e3b;
+	--t-harvest: #d9825a;
+	--t-manure: #9ac8f5;
 	--radius: 10px;
-	--font: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-	--serif: Fraunces, Georgia, 'Times New Roman', serif;
-	color-scheme: light;
+	--font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+	--serif: var(--font);
+	color-scheme: dark;
 }
 
 *,
@@ -55,11 +76,16 @@ h2,
 h3 {
 	margin: 0;
 	line-height: 1.2;
+	font-weight: 600;
 }
 
 .muted {
 	color: var(--muted);
 	font-size: 13px;
+}
+
+.mono {
+	font-family: var(--mono);
 }
 
 .chip {
@@ -69,8 +95,8 @@ h3 {
 	padding: 3px 10px;
 	border-radius: 999px;
 	font-size: 12px;
-	border: 1px solid #c9ccc2;
-	background: #fff;
+	border: 1px solid var(--field-line);
+	background: var(--card-2);
 	color: var(--ink);
 	white-space: nowrap;
 }
@@ -86,12 +112,21 @@ h3 {
 
 button,
 input,
-select {
+select,
+textarea {
 	font: inherit;
+	color: inherit;
+}
+input:not([type='checkbox']):not([type='radio']):not([type='range']),
+select,
+textarea {
+	background: var(--field);
+	border-color: var(--field-line);
+	color: var(--ink);
 }
 
 :focus-visible {
-	outline: 3px solid #7fb08a;
+	outline: 2px solid var(--green);
 	outline-offset: 2px;
 }
 
@@ -100,19 +135,59 @@ select {
 	align-items: center;
 	min-height: 40px;
 	padding: 8px 14px;
-	border-radius: 8px;
-	border: 1px solid var(--green);
-	background: #fff;
-	color: var(--green);
+	border-radius: 6px;
+	border: 1px solid var(--field-line);
+	background: transparent;
+	color: var(--ink);
 	text-decoration: none;
 	font-size: 14px;
 	cursor: pointer;
 }
+.btn:hover {
+	border-color: var(--muted);
+	color: var(--ink);
+}
 .btn.primary {
 	background: var(--green);
-	color: #fff;
+	border-color: var(--green);
+	color: var(--on-accent);
+	font-weight: 600;
+}
+.btn.primary:hover {
+	background: var(--green-dark);
+	color: var(--on-accent);
 }
 .btn.danger {
-	border-color: #b4423a;
-	color: #b4423a;
+	border-color: var(--bad-line);
+	color: var(--bad-ink);
+}
+
+/* Shared card + status dot */
+.card {
+	background: var(--card);
+	border: 1px solid var(--line);
+	border-radius: 12px;
+}
+.status-dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--idle);
+	flex: none;
+}
+.status-dot.ok {
+	background: var(--green);
+}
+.status-dot.warn {
+	background: #f5a54a;
+}
+.badge {
+	font-family: var(--mono);
+	font-size: 11px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--card-2);
+	color: var(--muted);
+	white-space: nowrap;
 }
