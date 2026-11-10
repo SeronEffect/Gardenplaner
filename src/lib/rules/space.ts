@@ -29,6 +29,31 @@ export function plantsPerRow(bedLengthCm: number, inRowSpacingCm: number | null 
 	return Math.floor(bedLengthCm / inRowSpacingCm);
 }
 
+/**
+ * A planting may cover several neighbouring rows of the same crop (bug-fix-001).
+ * The width is the source of truth; the number of rows is derived from it (at least 1).
+ */
+export function rowsInWidth(widthCm: number, rowSpacingCm: number | null | undefined): number {
+	if (!rowSpacingCm || rowSpacingCm <= 0) return 1;
+	return Math.max(1, Math.floor(widthCm / rowSpacingCm));
+}
+
+/** Plants of a full-length planting over all its rows. */
+export function plantsInPlanting(
+	bedLengthCm: number,
+	widthCm: number,
+	rowSpacingCm: number | null | undefined,
+	inRowSpacingCm: number | null | undefined
+): number | null {
+	const perRow = plantsPerRow(bedLengthCm, inRowSpacingCm);
+	return perRow === null ? null : perRow * rowsInWidth(widthCm, rowSpacingCm);
+}
+
+export interface Spacing {
+	rowSpacingCm?: number | null;
+	inRowSpacingCm?: number | null;
+}
+
 const rangesOverlap = (a1: number, a2: number, b1: number, b2: number) => a1 < b2 && b1 < a2;
 
 /** Rows overlap if they share space across the bed AND time. */
@@ -45,9 +70,11 @@ export function checkRow(
 	bed: BedSize,
 	row: RowLike,
 	others: readonly RowLike[],
-	inRowSpacingCm?: number | null
+	spacing: Spacing = {}
 ): SpaceIssue[] {
 	const issues: SpaceIssue[] = [];
+	const { inRowSpacingCm, rowSpacingCm } = spacing;
+	const rows = rowsInWidth(row.widthCm, rowSpacingCm);
 	if (row.widthCm <= 0 || row.offsetCm < 0) {
 		issues.push({ kind: 'INVALID', messageDe: 'Position und Breite der Reihe müssen positiv sein.' });
 	}
@@ -63,10 +90,14 @@ export function checkRow(
 	if (row.quantityMode === 'COUNT') {
 		if (!row.count || row.count < 1) {
 			issues.push({ kind: 'INVALID', messageDe: 'Bitte eine Anzahl Pflanzen angeben.' });
-		} else if (inRowSpacingCm && row.count * inRowSpacingCm > bed.lengthCm) {
+		} else if (inRowSpacingCm && row.count > (plantsInPlanting(bed.lengthCm, row.widthCm, rowSpacingCm, inRowSpacingCm) ?? Infinity)) {
+			const max = plantsInPlanting(bed.lengthCm, row.widthCm, rowSpacingCm, inRowSpacingCm);
 			issues.push({
 				kind: 'TOO_LONG',
-				messageDe: `${row.count} Pflanzen brauchen ${row.count * inRowSpacingCm} cm, die Reihe ist nur ${bed.lengthCm} cm lang (maximal ${plantsPerRow(bed.lengthCm, inRowSpacingCm)}).`
+				messageDe:
+					rows > 1
+						? `${row.count} Pflanzen passen nicht in ${rows} Reihen à ${bed.lengthCm} cm (maximal ${max}).`
+						: `${row.count} Pflanzen brauchen ${row.count * inRowSpacingCm} cm, die Reihe ist nur ${bed.lengthCm} cm lang (maximal ${max}).`
 			});
 		}
 	}
@@ -80,6 +111,23 @@ export function checkRow(
 		}
 	}
 	return issues;
+}
+
+/** Free space across the bed from `offsetCm` to the next row (in that time) or the bed edge. */
+export function freeWidthAt(
+	bed: BedSize,
+	offsetCm: number,
+	startDate: string,
+	endDate: string,
+	others: readonly RowLike[]
+): number {
+	let limit = bed.widthCm;
+	for (const o of others) {
+		if (!(o.startDate <= endDate && startDate <= o.endDate)) continue;
+		if (o.offsetCm <= offsetCm && offsetCm < o.offsetCm + o.widthCm) return 0;
+		if (o.offsetCm > offsetCm) limit = Math.min(limit, o.offsetCm);
+	}
+	return Math.max(0, limit - offsetCm);
 }
 
 /**

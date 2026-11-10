@@ -25,12 +25,18 @@
 	frost={data.frost}
 	species={data.species}
 	{others}
+	companions={data.companions}
+	historySeason={p.seasonStatus === 'HISTORY'}
+	following={data.following}
 	planting={p}
 	errors={form?.errors ?? []}
 />
 
 <form method="POST" action="?/loeschen&{q}" class="delete">
 	<button class="btn danger" type="submit">Reihe löschen</button>
+	{#if data.following > 0}
+		<button class="btn danger" type="submit" name="scope" value="following">Mit allen folgenden Sätzen löschen ({data.following})</button>
+	{/if}
 </form>
 
 <style>
@@ -46,6 +52,9 @@
 		margin: 4px 0 12px;
 	}
 	.delete {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
 		margin-top: 16px;
 		padding-top: 12px;
 		border-top: 1px solid var(--line-soft);

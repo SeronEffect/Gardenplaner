@@ -4,6 +4,8 @@ import { db } from './db/index.ts';
 import * as t from './db/schema.ts';
 import { getFrost } from './plants.ts';
 import { generateTasks, type TaskDraft } from '../rules/tasks.ts';
+import { soilTask } from '../rules/rotation.ts';
+import { assessPlanting, cropRowsOfBed } from './planning.ts';
 import type { FrostDates } from '../rules/timeline.ts';
 
 async function draftsFor(plantingId: number, frost: FrostDates): Promise<TaskDraft[]> {
@@ -26,7 +28,7 @@ async function draftsFor(plantingId: number, frost: FrostDates): Promise<TaskDra
 		.from(t.cultureSteps)
 		.where(eq(t.cultureSteps.routeId, row.planting.routeId))
 		.orderBy(asc(t.cultureSteps.sortOrder));
-	return generateTasks(
+	const drafts = generateTasks(
 		{
 			id: row.planting.id,
 			startDate: row.planting.startDate,
@@ -38,6 +40,26 @@ async function draftsFor(plantingId: number, frost: FrostDates): Promise<TaskDra
 		steps,
 		frost
 	);
+
+	// Same family grew here before (WARN beds) → swap soil / add compost first (spec §4.2)
+	const [bed] = await db.select().from(t.beds).where(eq(t.beds.id, row.planting.bedId));
+	if (bed && bed.rotationMode !== 'OFF') {
+		const rows = await cropRowsOfBed(bed.id);
+		const self = rows.find((r) => r.id === plantingId);
+		if (self) {
+			const { issues } = await assessPlanting(bed, self, false, rows);
+			const soil = soilTask(plantingId, row.planting.startDate, issues);
+			if (soil) drafts.push(soil);
+		}
+	}
+	return drafts;
+}
+
+/** Re-syncs every planting of a bed – a change to one row can affect the rotation of the others. */
+export async function syncBedTasks(bedId: number): Promise<void> {
+	const frost = await getFrost();
+	const rows = await db.select({ id: t.plantings.id }).from(t.plantings).where(eq(t.plantings.bedId, bedId));
+	for (const r of rows) await syncPlantingTasks(r.id, frost);
 }
 
 /**
