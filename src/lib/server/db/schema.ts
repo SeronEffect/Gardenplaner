@@ -3,6 +3,7 @@
 import {
 	boolean,
 	date,
+	index,
 	integer,
 	pgEnum,
 	pgTable,
@@ -234,3 +235,40 @@ export const plantings = pgTable('plantings', {
 	status: plantingStatus('status').notNull().default('PLANNED'),
 	notesDe: text('notes_de')
 });
+
+// ── Phase 3: tasks (spec §3, §4.4) ──────────────────────────────────────────
+export const taskType = pgEnum('task_type', [
+	'PRESOW',
+	'PRICK_OUT',
+	'PRESPROUT',
+	'HARDEN_OFF',
+	'DIRECT_SOW',
+	'PLANT_OUT',
+	'CARE',
+	'FERTILIZE',
+	'PRUNE',
+	'HARVEST',
+	'CLEAR',
+	'MANUAL'
+]);
+export const taskStatus = pgEnum('task_status', ['OPEN', 'DONE', 'SKIPPED']);
+
+export const tasks = pgTable(
+	'tasks',
+	{
+		id: serial('id').primaryKey(),
+		plantingId: integer('planting_id').references(() => plantings.id, { onDelete: 'cascade' }),
+		bedId: integer('bed_id').references(() => beds.id, { onDelete: 'cascade' }),
+		type: taskType('type').notNull(),
+		location: stepLocation('location').notNull().default('BED'),
+		titleDe: text('title_de').notNull(),
+		dueStart: date('due_start', { mode: 'string' }).notNull(),
+		dueEnd: date('due_end', { mode: 'string' }).notNull(),
+		status: taskStatus('status').notNull().default('OPEN'),
+		doneAt: date('done_at', { mode: 'string' }),
+		/** Set for generated tasks (see rules/tasks.ts); null = added by hand */
+		generatedKey: text('generated_key').unique(),
+		notesDe: text('notes_de')
+	},
+	(t) => [index('tasks_due').on(t.dueStart, t.dueEnd)]
+);

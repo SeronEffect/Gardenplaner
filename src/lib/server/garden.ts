@@ -4,6 +4,7 @@ import { db } from './db/index.ts';
 import * as t from './db/schema.ts';
 import { getFrost } from './plants.ts';
 import { checkRow, plantingWindow, type SpaceIssue } from '../rules/space.ts';
+import { syncPlantingTasks } from './tasks.ts';
 
 // ── Seasons ──────────────────────────────────────────────────────────────
 export async function listSeasons() {
@@ -199,9 +200,11 @@ export async function savePlanting(
 	const values = { ...input, startDate, endDate, count: input.quantityMode === 'COUNT' ? input.count : null };
 	if (id === null) {
 		const [row] = await db.insert(t.plantings).values(values).returning({ id: t.plantings.id });
+		await syncPlantingTasks(row.id);
 		return { ok: true, id: row.id };
 	}
 	await db.update(t.plantings).set(values).where(eq(t.plantings.id, id));
+	await syncPlantingTasks(id);
 	return { ok: true, id };
 }
 
