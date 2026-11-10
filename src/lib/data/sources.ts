@@ -60,6 +60,22 @@ export const SOURCES = {
 		name: 'Hornbach – Mischkultur im Garten',
 		url: 'https://www.hornbach.at/projekte/mischkultur-im-garten/'
 	},
+	LWG: {
+		name: 'LWG Bayern / Bayerische Gartenakademie – Kartoffeln im Garten (3 kg Pflanzgut für 10 m²)',
+		url: 'https://www.lwg.bayern.de/mam/cms06/gartenakademie/dateien/2153-2020.pdf'
+	},
+	Keimzeit: {
+		name: 'Keimzeit – Tomatenkatalog 2026 (Wuchshöhen Stabtomaten)',
+		url: 'https://www.keimzeit-saatgut.de/media/pdf/70/32/44/tomaten-2026.pdf'
+	},
+	Gartenjournal: {
+		name: 'Gartenjournal – Gurken-Rankhilfe (Rankhöhe 1–2 m)',
+		url: 'https://www.gartenjournal.net/gurken-rankhilfe'
+	},
+	NaturaDB: {
+		name: 'NaturaDB – Himbeere (Rubus idaeus), Wuchshöhe',
+		url: 'https://www.naturadb.de/pflanzen/rubus-idaeus/'
+	},
 	Praxis: {
 		name: 'Allgemeine Gartenpraxis (noch nicht einzeln belegt)'
 	}

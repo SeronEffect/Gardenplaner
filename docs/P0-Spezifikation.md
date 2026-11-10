@@ -158,10 +158,11 @@ Rows always run **along `lengthCm`**; they are stacked across `widthCm`.
 `plantingId?`, `bedId?`, `type`, `location`, `titleDe`, `dueStart`, `dueEnd`, `status OPEN | DONE | SKIPPED`, `doneAt?`, `generatedKey?` (unique; null = manual), `notesDe`.
 
 ### LogEntry
-`date`, `plantingId?`, `bedId?`, `type HARVEST | NOTE | PROBLEM | SOIL_TEST | PHOTO`, `amount?`, `unit? (kg | Stück | Bund)`, `textDe`, `photoPath?`, `ph?`.
+`date`, `plantingId?`, `bedId?`, `speciesId?`, `type HARVEST | NOTE`, `amount?`, `unit? (kg | Stück | Bund)`, `textDe?`.
+P5 builds only harvest and notes (decision 10.11.2026). PROBLEM, SOIL_TEST, PHOTO (`photoPath`, `ph`) can be added later as new enum values. `speciesId` is copied from the planting so yields survive when a row is deleted.
 
 ### ShoppingItem
-`seasonId`, `speciesId`, `varietyId?`, `kind SEED | SEEDLING | SETS | GREEN_MANURE`, `quantity`, `unit`, `bought bool`, `generated bool`.
+`seasonId`, `speciesId?`, `kind? SEED | SEEDLING | SETS | GREEN_MANURE` (null = manual), `labelDe`, `quantity?`, `unit?`, `detailDe?`, `bought bool`, `generatedKey?` (`<speciesId>:<kind>`, unique per season; null = manual). Varieties are not split up in P5.
 
 ---
 
@@ -212,16 +213,26 @@ When a planting is set to DONE (or the planner finds a free space) and the gap u
 A series creates n plantings with `firstDate + i × intervalDays`. Moving or deleting one asks: "nur diesen Satz / alle folgenden".
 *(P4)* Each set stays in the first row if it is free again, otherwise it moves to the next free space across the bed; the form shows the sets before saving. Nothing is saved if one set does not fit. "alle folgenden" moves the later sets by the same number of days and takes over crop, route, width and quantity; each set keeps its row. Table `succession_series` (bed, species, interval, count), `plantings.succession_series_id`.
 
-### 4.7 Shopping list (no stock)
-Generated per season from all PLANNED plantings, grouped by `kind`:
-- SEED: species/variety + metres of row or number of plants (e.g. "Möhre – 2 Reihen à 2,0 m")
-- SEEDLING: number of plants
-- SETS: seed potatoes in kg (`count × setWeightG`), onion sets as a number
-- GREEN_MANURE: m² of bed
-Entries can be ticked "gekauft"; regenerating keeps manual entries and ticks.
+### 4.7 Shopping list (no stock) – built in P5
+Generated per season from all plantings of that season with status PLANNED or ACTIVE (ACTIVE too, so an item does not vanish when the row starts growing); sourcing EXISTING is skipped. One line per species and kind (`rules/shopping.ts`):
+| kind | when | quantity |
+|---|---|---|
+| SEED | sourcing SEED | plants (full rows: `rows × floor(length / inRowSpacing)`, COUNT: count) + detail "N Reihen · M m Reihe" |
+| SEEDLING | sourcing SEEDLING | plants |
+| SETS | sourcing SETS | with `setWeightG` (Kartoffel): kg = plants × setWeightG, detail "≈ N Knollen"; otherwise pieces (Steckzwiebeln) |
+| GREEN_MANURE | green manure species | m² = bed length × planting width |
+Units: Pflanzen, Stück, kg, m² (decision: no pack sizes, no fertiliser). The list is synced on every visit: generated lines are updated by `generatedKey`, ticks ("gekauft") stay; lines no longer in the plan are removed unless ticked. Manual lines (free text, quantity, unit) are never touched.
 
-### 4.8 Suggestion engine (Phase 5)
-Input: wishlist (species, count or number of rows). Fill the highest-value spots first (score = rotation + neighbours + sun + tall plants on the north side), then improve by swapping (local search). Output = suggested plantings with status PLANNED, which you confirm.
+### 4.8 Suggestion engine (Phase 5) – "Top-Kulturen pro freiem Platz"
+Decision 10.11.2026: no automatic overall plan; for every free space the best crops are shown and Jendrik picks one.
+- **Input:** season (PLANNING/ACTIVE), wishlist = species chosen on the page (default: all outdoor crops without green manure), kept only in the URL (`?arten=`), not stored.
+- **Beds:** all active beds except type GREENHOUSE (greenhouse stays fixed for Tomate/Gurke/Paprika/Chili).
+- **Free space:** for each species its planting window from the default culture route in that year; free gaps across the bed width during that window (`freeGaps`). A gap must be at least one row spacing wide. Candidate position = start of the gap, width = rows × row spacing (default 1 row, choosable when taking it over).
+- **Score** = `assessRow` (rotation −5, good feeding order +2, same feeding type −1, good neighbour +1, bad neighbour −3) + height: tall crops (`heightMaxCm ≥ 120`) in beds with horizontal rows get +1 in the northern third (top of the map = north), −1 south of the middle. Candidates blocked by rotation in STRICT beds are left out. Sun (`species.light`) is not used yet – the light data comes with P7.
+- **Output:** per bed and gap the top 3 crops with score and reasons (+ "N weitere passen"). "Übernehmen" (with the number of rows) saves a PLANNED planting via the normal `savePlanting` (all space and rotation checks); the page stays open with a link to the new row for fine-tuning, so several suggestions can be taken one after another.
+
+### 4.9 Diary (Phase 5)
+Page `/tagebuch`: add a harvest (amount + kg/Stück/Bund) or a note, optionally linked to a bed and a row of the season. List filtered by year and bed; yield per crop and unit for the season.
 
 ---
 
@@ -302,8 +313,9 @@ Nachtschatten 3 · **Kürbisgewächse 4** (Plantura) · **Kreuzblütler 4** (inc
 - ✅ Toxicity and storage texts checked against sources
 - ✅ Germination temperatures (Tomate, Gurke, Paprika, Chili) and minimum soil temperatures (Gurke 14 °C, Kartoffel 7 °C) filled in
 - Open: other environment fields from §8.2 (minimum temperature, soil moisture, light) → P7
-- Open: heights/widths for the plant card (no reliable source per species yet; heights depend strongly on the variety)
-- Open: `setWeightG` for seed potatoes (needed for the shopping list in P5)
+- ✅ P5: heights as rough values per species (`heightMinCm`/`heightMaxCm`, sourced where possible, otherwise marked "Praxis"; varieties differ a lot) – used for "tall plants on the north side"
+- ✅ P5: `setWeightG` = 70 g per seed potato (LWG Bayern: 3 kg for 10 m² at 70 × 35 cm ≈ 41 tubers)
+- Open: widths for the plant card
 
 > **Greenhouse:** the order Tomate | Paprika | Chili | Gurke has only good neighbours next to each other. Tomate and Gurke must not be in neighbouring rows.
 
@@ -316,10 +328,10 @@ Nachtschatten 3 · **Kürbisgewächse 4** (Plantura) · **Kreuzblütler 4** (inc
 | 1 | **Übersicht** | Desktop | KW tasks by location, ready to harvest, frost warning, season status |
 | 1m | **Gartenmodus** | Phone | This week's tasks as a checklist, "Ernte eintragen", "Notiz/Foto" |
 | 2 | **Gartenplan** | Desktop (phone: view only) | 2D map, season selector + date slider, rows coloured by crop; click a bed → bed detail with history |
-| 3 | **Saisonplanung** | Desktop | Wishlist (left) · bed map with drag & drop (middle) · warnings/suggestions (right) · tab "Einkaufsliste" |
+| 3 | **Saisonplanung** | Desktop + phone | Wishlist (left) · suggestions per bed and free space (right) · tab "Einkaufsliste" (drag & drop on the map: later) |
 | 4 | **Kalender** | Desktop + phone | KW view (default) / month, filter by location/bed/task type |
 | 5 | **Pflanzen** | Both | Library as a grid of cards, search, filter by family/feeding type; card detail |
-| 6 | **Tagebuch** | Both | Harvests, notes, problems, soil tests; filter by bed/crop; yield per season |
+| 6 | **Tagebuch** | Both | Harvests and notes (P5); filter by year/bed; yield per crop and season. Harvest tasks link here ("Ernte eintragen") |
 
 ### Plant card (one side, top → bottom)
 1. Picture (credit line + licence) 2. Deutscher Name · *lateinischer Name* · Familie · ein-/mehrjährig 3. Key figures: Höhe, Breite, Abstand, Nährstoffbedarf 4. Toxicity bar (only when relevant) 5. **12-month timeline**: Fensterbank (blue), Gewächshaus (violet), Direktsaat (green), Auspflanzen (orange), Ernte (red) 6. Gute/schlechte Nachbarn (chips) 7. Düngung 8. Lagerung 9. "In deinem Garten 2027: Beet B, Reihe 2".

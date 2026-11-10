@@ -38,6 +38,9 @@
 	const spacing = $derived(
 		sp.rowSpacingCm && sp.inRowSpacingCm ? `${sp.rowSpacingCm} × ${sp.inRowSpacingCm} cm` : null
 	);
+	const height = $derived(
+		sp.heightMaxCm ? `${sp.heightMinCm && sp.heightMinCm !== sp.heightMaxCm ? sp.heightMinCm + '–' : ''}${sp.heightMaxCm} cm` : null
+	);
 	const germ = $derived(
 		sp.germTempMinC ? `${sp.germTempMinC}${sp.germTempMaxC ? '–' + sp.germTempMaxC : ''} °C` : null
 	);
@@ -80,6 +83,7 @@
 		</div>
 
 		<dl class="facts">
+			{#if height}<div><dt>Höhe</dt><dd>{height} <small class="muted">(Richtwert)</small></dd></div>{/if}
 			{#if spacing}<div><dt>Abstand</dt><dd>{spacing}</dd></div>{/if}
 			<div><dt>Nährstoffbedarf</dt><dd>{FEEDING[sp.feedingType]}</dd></div>
 			{#if germ}<div><dt>Keimtemperatur</dt><dd>{germ}</dd></div>{/if}

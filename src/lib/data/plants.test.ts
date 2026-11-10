@@ -35,6 +35,14 @@ describe('plant data', () => {
 		expect(Object.values(strip).some((cells) => cells.some(Boolean))).toBe(true);
 	});
 
+	it('has heights for every species and a seed potato weight (P5)', () => {
+		for (const s of SPECIES) {
+			expect(s.heightMinCm, s.slug).toBeGreaterThan(0);
+			expect(s.heightMaxCm, s.slug).toBeGreaterThanOrEqual(s.heightMinCm!);
+		}
+		expect(SPECIES.find((s) => s.slug === 'kartoffel')!.setWeightG).toBe(70);
+	});
+
 	it('has consistent neighbour pairs', () => {
 		const slugs = new Set(SPECIES.map((s) => s.slug));
 		const seen = new Map<string, string>();

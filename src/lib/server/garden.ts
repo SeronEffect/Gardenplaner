@@ -132,6 +132,7 @@ export async function speciesOptions() {
 			nameDe: t.species.nameDe,
 			rowSpacingCm: t.species.rowSpacingCm,
 			inRowSpacingCm: t.species.inRowSpacingCm,
+			heightMaxCm: t.species.heightMaxCm,
 			lifespanYears: t.species.lifespanYears,
 			defaultSourcing: t.species.defaultSourcing,
 			greenhouse: t.species.greenhouse,

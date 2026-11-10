@@ -62,7 +62,7 @@ export const NAV = [
 	{ href: '/saisonplanung', label: 'Saisonplanung', phase: 5 },
 	{ href: '/kalender', label: 'Kalender', phase: 3 },
 	{ href: '/pflanzen', label: 'Pflanzen', phase: 1 },
-	{ href: '/tagebuch', label: 'Tagebuch', phase: 4 }
+	{ href: '/tagebuch', label: 'Tagebuch', phase: 5 }
 ] as const;
 
 /** 15.03. */
